@@ -5,7 +5,7 @@ const router = Router()
 
 router.post("/create-collection",createCollection)
 router.get("/", getAllCollections);
-router.route("/:id").get(getCollectionById).put(updateCollection).delete(deleteCollection);
+router.route("/:id").get(getCollectionById).put(updateCollection);
 router.get("/:id/audio", getCollectionWithAudio);
 router.get("/filter",getFilteredCollections)
 

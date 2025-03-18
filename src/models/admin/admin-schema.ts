@@ -35,6 +35,9 @@ const adminSchema = new mongoose.Schema(
     profilePic: {
       type: String,
     },
+    gender:{
+      type: String,      
+    },
     address: { 
         type: String
      },

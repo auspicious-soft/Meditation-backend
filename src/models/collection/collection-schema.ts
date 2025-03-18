@@ -18,6 +18,11 @@ const CollectionSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "BestFor",
   },
+  description:{
+    type: String,
+    required: true,
+    trim: true,
+  },
   isActive: { type: Boolean, default: true },
 },{
   timestamps: true,
