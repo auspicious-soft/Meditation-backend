@@ -22,6 +22,7 @@
     "@types/jsonwebtoken": "^9.0.7",
     "@types/node": "^22.5.4",
     "@types/prop-types": "^15.7.13",
+    "@types/stripe": "^8.0.416",
     "@types/uuid": "^10.0.0",
     "@types/webidl-conversions": "^7.0.3",
     "ts-node": "^10.9.2",
@@ -49,7 +50,7 @@
     "nodemon": "^3.1.4",
     "resend": "^4.0.0",
     "socket.io": "^4.7.5",
-    "stripe": "^17.3.1",
+    "stripe": "^17.7.0",
     "twilio": "^5.3.6",
     "uuid": "^10.0.0",
     "zod": "^3.23.8"

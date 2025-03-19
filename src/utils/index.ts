@@ -32,3 +32,7 @@ export const convertToBoolean = (value: string) => {
     else if (value === 'false') return false
     else return value
 }
+
+export function timestampToDateString(timestamp: number): string {
+    return new Date(timestamp * 1000).toISOString(); // e.g., "2025-05-16T07:37:58.000Z"
+  }

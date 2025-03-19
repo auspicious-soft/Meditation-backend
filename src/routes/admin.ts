@@ -1,5 +1,5 @@
 import { Router } from "express";
-import {  deleteAUser, forgotPassword, getDashboardStats,  login,  newPassswordAfterOTPVerified,} from "../controllers/admin/admin";
+import {  deleteAUser, forgotPassword, getAnalytics, getDashboardStats,  login,  newPassswordAfterOTPVerified,} from "../controllers/admin/admin";
 
 
 
@@ -10,6 +10,7 @@ import { verifyOtpPasswordReset } from "src/controllers/user/user";
 import { checkAuth } from "src/middleware/check-auth";
 import { newPassswordAfterOTPVerifiedService } from "src/services/admin/admin-service";
 import { deleteCollection } from "src/controllers/collection/collection-controller";
+import { getAllCoupons, getAllSubscriptionsHandler, getPrices, getSubscriptionByIdHandler, updatePrices } from "src/controllers/subscription/subscription-controller";
 
 
 
@@ -22,5 +23,14 @@ router.delete("/collection/:id",deleteCollection)
 router.delete("/delete-user/:id", deleteAUser);
 router.get("/dashboard", checkAuth, getDashboardStats)
 
+//Analysis
+router.get("/analysis", getAnalytics)
+
+//stripe
+router.post('/update-prices', updatePrices);
+router.get('/prices', getPrices);
+router.get('/coupons', getAllCoupons);
+router.get('/subscriptions', getAllSubscriptionsHandler);
+router.get('/subscriptions/:subscriptionId', getSubscriptionByIdHandler);
 
 export { router }

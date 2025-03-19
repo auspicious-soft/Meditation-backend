@@ -15,6 +15,8 @@ import { passwordResetTokenModel } from "src/models/password-token-schema";
 import { usersModel } from "src/models/user/user-schema";
 import { companyModels } from "../../models/company/company-schema"; 
 import jwt from "jsonwebtoken";
+import { getAllSubscriptionsHandler } from "src/controllers/subscription/subscription-controller";
+import { getAllSubscriptions } from "../subscription/subscription-service";
 
 const schemas = [adminModel, usersModel, companyModels];
 
@@ -272,3 +274,40 @@ export const getDashboardStatsService = async (payload: any, res: Response) => {
   // };
   // return response;
 };
+
+export const AnalyticsService = async ( res: Response) => {
+  const totalUser = await usersModel.countDocuments();
+  const activeUsers = await usersModel.countDocuments({isAccountActive: true});
+  const newUser = await usersModel.countDocuments({createdAt: { $gte: new Date(new Date().setDate(new Date().getDate() - 7)) }});
+  const totalDownload = 1220;
+  const totalAudioPlays = 1220;
+  const allSubscription = await getAllSubscriptions()
+  const subscriptionExpireToday = allSubscription.filter((sub) => new Date(sub.current_period_end) === new Date(new Date().setDate(new Date().getDate() + 1)))
+  // const paymentToday = allSubscription.filter((sub) => new Date(sub.created) === new Date(new Date().setDate(new Date().getDate() )))
+  const paymentToday = allSubscription.filter((sub) => {
+    const subDate = new Date(sub.created);
+    const today = new Date();
+  
+    // Set both subDate and today to midnight (removing time part)
+    subDate.setHours(0, 0, 0, 0);
+    today.setHours(0, 0, 0, 0);
+  
+    return subDate.getTime() === today.getTime();
+  });
+
+  return {
+      success: true,
+      message: "Analysis fetched successfully",
+      data: {
+        totalUser,
+        activeUsers,
+        totalDownload,
+        totalAudioPlays,
+        newUser,
+        subscriptionExpireToday,
+        paymentToday
+
+      }
+  };
+};
+
