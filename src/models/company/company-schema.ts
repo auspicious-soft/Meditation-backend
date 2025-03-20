@@ -1,4 +1,5 @@
 import mongoose, { Schema, Document } from "mongoose";
+import { subscriptionExpireInAWeek } from 'src/controllers/subscription/subscription-controller';
 
 const CompanySchema = new Schema(
   {
@@ -11,14 +12,30 @@ const CompanySchema = new Schema(
       type: String,
       default: null,
     },
-    planId: {
+    subscriptionStatus: {
       type: String,
+      default: "inactive",
+    },
+    subscriptionId: {
+      type: String,
+      default: null,
+    },
+    subscriptionStartDate: {
+      type: Date,
+      default: null,
+    },
+    subscriptionExpiryDate: {
+      type: Date,
       default: null,
     },
     role: {
       type: String,
       required: true,
       default: "company",
+    },
+    planInterval: {
+      type: String,
+      default: null,
     },
     planType: {
       type: String,

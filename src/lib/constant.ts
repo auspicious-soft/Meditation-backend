@@ -11,10 +11,10 @@ export const httpStatusCode = {
 }
 
 
-export const priceIdsMap = {
-    'free': process.env.STRIPE_PRICE_FREE as string,
-    'intro': process.env.STRIPE_PRICE_INTRO as string,
-    'pro': process.env.STRIPE_PRICE_PRO as string
+export const planIdsMap = {
+    'bronzePlan': process.env.STRIPE_PRODUCT_BRONZE_PLAN as string,
+    'silverPlan': process.env.STRIPE_PRODUCT_SILVER_PLAN as string,
+    'goldPlan': process.env.STRIPE_PRODUCT_GOLD_PLAN as string
 }
 
 export const yearlyPriceIdsMap = {

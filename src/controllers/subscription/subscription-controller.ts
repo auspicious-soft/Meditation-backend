@@ -1,7 +1,8 @@
 import { Request, Response } from 'express';
+import mongoose from 'mongoose';
 import { httpStatusCode } from 'src/lib/constant';
 import { errorParser } from 'src/lib/errors/error-response-handler';
-import { getAllCouponsService, getAllSubscriptions, getPricesService, getSubscriptionById, subscriptionExpireInAWeekService, updatePricesService } from 'src/services/subscription/subscription-service';
+import { afterSubscriptionCreatedService, cancelSubscriptionService, createSubscriptionService, getAllCouponsService, getAllSubscriptions, getPricesService, getSubscriptionById, subscriptionExpireInAWeekService, updatePricesService } from 'src/services/subscription/subscription-service';
 
 export const updatePrices = async (req: any, res: Response) => {
   try {
@@ -104,3 +105,45 @@ export const getAllCoupons = async (req: Request, res: Response) => {
       });
     }
   };
+  export const createSubscription = async (req: Request, res: Response) => {
+    try {
+      const response = await createSubscriptionService(req.params, req.body,res);
+      // return res.status(response.httpStatusCode).json(response);
+      res.status(200).json({
+        success: true,
+        data: response,
+      });
+    } catch (error: any) {
+      const { code, message } = errorParser(error);
+      return res.status(code || httpStatusCode.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        message: message || "An error occurred while retrieving the companies",
+      });
+    }
+  };
+
+  // WEBHOOK
+export const afterSubscriptionCreated = async (req: Request, res: Response) => {
+  const session = await mongoose.startSession()
+  session.startTransaction()
+  try {
+      const response = await afterSubscriptionCreatedService(req, session, res)
+      return res.status(httpStatusCode.OK).json(response);
+  } catch (error) {
+      await session.abortTransaction()
+      const { code, message } = errorParser(error);
+      return res.status(code || httpStatusCode.INTERNAL_SERVER_ERROR).json({ success: false, message: message || "An error occurred" });
+  } finally {
+      session.endSession()
+  }
+}
+export const cancelSubscription = async (req: Request, res: Response) => {
+  try {
+    const userId="67ad838627a8b4067711343a"
+      const response = await cancelSubscriptionService(userId, req.params.subscriptionId, res)
+      return res.status(httpStatusCode.CREATED).json(response)
+  } catch (error) {
+      const { code, message } = errorParser(error)
+      return res.status(code || httpStatusCode.INTERNAL_SERVER_ERROR).json({ success: false, message: message || "An error occurred" });
+  }
+}

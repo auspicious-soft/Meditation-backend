@@ -9,6 +9,7 @@ import { checkValidAdminRole } from "./utils";
 import bodyParser from "body-parser";
 import { login, newPassswordAfterOTPVerified } from "./controllers/admin/admin";
 import { forgotPassword } from "./controllers/admin/admin";
+import { afterSubscriptionCreated } from "./controllers/subscription/subscription-controller";
 
 
 
@@ -19,13 +20,11 @@ const __dirname = path.dirname(__filename); // <-- Define __dirname
 const PORT = process.env.PORT || 8000;
 const app = express();
 app.set("trust proxy", true);
-app.use(
-  bodyParser.json({
-    verify: (req: any, res, buf) => {
+app.use(bodyParser.json({
+  verify: (req: any, res, buf) => {
       req.rawBody = buf.toString();
-    },
-  })
-);
+  }
+}))
 // app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -60,5 +59,8 @@ app.use('/api/bestfor', bestfor);
 app.use("/api/audio", audio);
 app.post("/api/forgot-password", forgotPassword);
 app.patch("/api/otp-new-password-verification", newPassswordAfterOTPVerified);
-
+app.post('/api/company/webhook', express.raw({ type: 'application/json' }), afterSubscriptionCreated)
+app.get('/api/company/webhook', (req, res) => {
+  res.send('Webhook endpoint is active! Use POST to send events.');
+});
 app.listen(PORT, () => console.log(`Server is listening on port ${PORT}`));
