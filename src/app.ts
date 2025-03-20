@@ -58,5 +58,7 @@ app.use("/api/collection", collection);
 app.use('/api/level', level);
 app.use('/api/bestfor', bestfor);
 app.use("/api/audio", audio);
+app.post("/api/forgot-password", forgotPassword);
+app.patch("/api/otp-new-password-verification", newPassswordAfterOTPVerified);
 
 app.listen(PORT, () => console.log(`Server is listening on port ${PORT}`));

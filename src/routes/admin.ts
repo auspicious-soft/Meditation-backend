@@ -1,26 +1,24 @@
 import { Router } from "express";
-import {  deleteAUser, forgotPassword, getDashboardStats,  login,  newPassswordAfterOTPVerified,} from "../controllers/admin/admin";
-
-
-
-// import { checkAdminAuth } from "../middleware/check-auth";
-import { upload } from "../configF/multer";
-import { checkMulter } from "../lib/errors/error-response-handler"
-import { verifyOtpPasswordReset } from "src/controllers/user/user";
+import {  deleteAUser,getDashboardStats} from "../controllers/admin/admin";
 import { checkAuth } from "src/middleware/check-auth";
-import { newPassswordAfterOTPVerifiedService } from "src/services/admin/admin-service";
-import { deleteCollection } from "src/controllers/collection/collection-controller";
-
-
+import { createCollection, deleteCollection } from "src/controllers/collection/collection-controller";
+import { deleteAudio, uploadAudio } from "src/controllers/audio/audio-controller";
+import { createCompany } from "src/controllers/company/company";
+import { createBestFor, deleteBestFor } from "src/controllers/bestfor/bestfor-controller";
+import { createLevel, deleteLevel } from "src/controllers/level/level-controller";
 
 const router = Router();
 
-router.post("/login", login);
-router.post("/forgot-password", forgotPassword);
-router.patch("/otp-new-password-verification", newPassswordAfterOTPVerified);
-router.delete("/collection/:id",deleteCollection)
+router.post("/ulpoad-audio",uploadAudio)
+router.post("/ulpoad-collection",createCollection)
+router.post("/create-company", createCompany);
+router.post("/create-bestfor",createBestFor)
+router.post("/create-level", createLevel);
+router.delete("/delete-collection/:id",deleteCollection)
 router.delete("/delete-user/:id", deleteAUser);
+router.delete("/delete-audio/:id", deleteAudio);
+router.delete("/delete-bestfor/:id",deleteBestFor);
+router.delete("/delete-level/:id",deleteLevel)
 router.get("/dashboard", checkAuth, getDashboardStats)
-
 
 export { router }

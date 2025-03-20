@@ -46,6 +46,10 @@ const CompanySchema = new Schema(
       type: Boolean,
       default: true,
     },
+    emailVerified:{
+      type: Boolean,
+      default: true,
+    }
   },
   { timestamps: true }
 );

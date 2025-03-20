@@ -80,11 +80,6 @@ export const forgotPasswordService = async (payload: any, res: Response) => {
       user = await (schema as any)
         .findOne({ email: email })
         .select("+password");
-    } else {
-      const formattedPhoneNumber = `${countryCode}${email}`;
-      user = await (schema as any)
-        .findOne({ phoneNumber: formattedPhoneNumber })
-        .select("+password");
     }
     if (user) break; // Exit the loop if user is found
   }
@@ -103,19 +98,7 @@ export const forgotPasswordService = async (payload: any, res: Response) => {
       console.log("err:", err);
       return { success: true, message: "Password reset email sent with OTP" };
     }
-  } else {
-    const formattedPhoneNumber = `${countryCode}${email}`;
-    const passwordResetTokenBySms = await generatePasswordResetTokenByPhone(
-      formattedPhoneNumber
-    );
-    if (passwordResetTokenBySms) {
-      await generatePasswordResetTokenByPhoneWithTwilio(
-        formattedPhoneNumber,
-        passwordResetTokenBySms.token
-      );
-      return { success: true, message: "Password reset SMS sent with OTP" };
-    }
-  }
+  } 
 
   return errorResponseHandler(
     "Failed to generate password reset token",
