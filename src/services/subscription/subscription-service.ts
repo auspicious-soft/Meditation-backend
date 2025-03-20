@@ -1,6 +1,7 @@
 import stripe, { Stripe } from "stripe";
 import { configDotenv } from "dotenv";
 import { timestampToDateString } from "src/utils";
+import { subscriptionExpireReminder } from "src/utils/mails/mail";
 
 // Load environment variables
 configDotenv();
@@ -305,4 +306,7 @@ export async function subscriptionExpireInAWeekService() {
 	});
 
 	return expiringSubscriptions;
+}
+export async function subscriptionExpireRemainderService() {
+	await subscriptionExpireReminder({ name: "John Doe", email: "G9VqE@example.com", expiryDate: "2023-09-30" });
 }

@@ -52,3 +52,24 @@ export const sendUserVerificationEmail = async (email: string, verificationCode:
     `,
   });
 }
+
+
+export const subscriptionExpireReminder = async (payload: any) => {
+  await resend.emails.send({
+      from: process.env.COMPANY_RESEND_GMAIL_ACCOUNT as string,
+      to: payload.email,
+      subject: "Subscription Expiry Reminder",
+      text: `Hello ${payload.name },
+
+We hope you're enjoying our services! This is a friendly reminder that your subscription is set to expire on ${payload.expiryDate}.
+
+To continue enjoying uninterrupted access, please renew your subscription before the expiration date.
+
+
+If you have any questions or need assistance, feel free to contact our support team.
+
+Best regards,  
+${process.env.COMPANY_NAME} Team`
+});
+};
+// Renew Now: ${payload.renewalLink}
