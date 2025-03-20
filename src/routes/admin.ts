@@ -9,8 +9,8 @@ import { createLevel, deleteLevel } from "src/controllers/level/level-controller
 
 const router = Router();
 
-router.post("/ulpoad-audio",uploadAudio)
-router.post("/ulpoad-collection",createCollection)
+router.post("/upload-audio",uploadAudio)
+router.post("/upload-collection",createCollection)
 router.post("/create-company", createCompany);
 router.post("/create-bestfor",createBestFor)
 router.post("/create-level", createLevel);
