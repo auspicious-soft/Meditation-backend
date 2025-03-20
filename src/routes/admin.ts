@@ -10,7 +10,7 @@ import { deleteAudio, uploadAudio } from "src/controllers/audio/audio-controller
 import { createCompany } from "src/controllers/company/company";
 import { createBestFor, deleteBestFor } from "src/controllers/bestfor/bestfor-controller";
 import { createLevel, deleteLevel } from "src/controllers/level/level-controller";
-import { getAllCoupons, getAllSubscriptionsHandler, getPrices, getSubscriptionByIdHandler, subscriptionExpireInAWeek, updatePrices } from "src/controllers/subscription/subscription-controller";
+import { getAllCoupons, getAllSubscriptionsHandler, getPrices, getSubscriptionByIdHandler, subscriptionExpireInAWeek, subscriptionExpireRemainder, updatePrices } from "src/controllers/subscription/subscription-controller";
 
 const router = Router();
 
@@ -24,11 +24,12 @@ router.delete("/delete-user/:id", deleteAUser);
 router.delete("/delete-audio/:id", deleteAudio);
 router.delete("/delete-bestfor/:id",deleteBestFor);
 router.delete("/delete-level/:id",deleteLevel)
-router.get("/dashboard", checkAuth, getDashboardStats)
+router.get("/dashboard", getDashboardStats)
 
 //Analysis
 router.get("/analysis", getAnalytics)
-
+//plan expire remainder
+router.post("/subscription-expire-remainder/:id", subscriptionExpireRemainder)
 //stripe
 router.post('/update-prices', updatePrices);
 router.get('/prices', getPrices);

@@ -2,7 +2,7 @@ import { configDotenv } from "dotenv";
 import { Response } from "express";
 import mongoose from "mongoose";
 import stripe from "src/configF/stripe";
-import { planIdsMap } from "src/lib/constant";
+import { httpStatusCode, planIdsMap } from "src/lib/constant";
 import { errorResponseHandler } from "src/lib/errors/error-response-handler";
 import { companyModels } from "src/models/company/company-schema";
 import { timestampToDateString } from "src/utils";
@@ -310,8 +310,17 @@ export async function subscriptionExpireInAWeekService() {
 
 	return expiringSubscriptions;
 }
-export async function subscriptionExpireRemainderService() {
-	await subscriptionExpireReminder({ name: "John Doe", email: "G9VqE@example.com", expiryDate: "2023-09-30" });
+export async function subscriptionExpireRemainderService(id: string, res: Response) {
+	const company = await companyModels.findById(id)
+	if (company) {
+		await subscriptionExpireReminder({ name: company.companyName, email: company.email, expiryDate: company.subscriptionExpiryDate, planType: company.planType });
+		return{
+			status:true,
+			message:"Reminder sent successfully"
+		}
+	} else {
+		return errorResponseHandler("Company not found", httpStatusCode.NOT_FOUND, res)
+	}
 }
 
 
@@ -515,7 +524,6 @@ export const afterSubscriptionCreatedService = async (payload: any, transaction:
         const subscription = await stripe.subscriptions.retrieve(subscriptionId as string)
         const metadata = subscription.metadata
         if (!subscription) return errorResponseHandler('Subscription not found', 404, res)
-			console.log('subscription: ', subscription);
 
         const customer = await stripe.customers.retrieve(customerId as string)
         if (!customer) return errorResponseHandler('Customer not found', 404, res)
@@ -584,7 +592,7 @@ export const afterSubscriptionCreatedService = async (payload: any, transaction:
     }
 }
 
-export const cancelSubscriptionService = async (id: string, subscriptionId: string, res: Response) => {
+export const cancelSubscriptionService = async (id: string,  res: Response) => {
     const user = await companyModels.findById(id)
     if (!user) return errorResponseHandler("User not found", 404, res)
 
@@ -592,7 +600,7 @@ export const cancelSubscriptionService = async (id: string, subscriptionId: stri
     if (!subscription) return errorResponseHandler("Subscription not found", 404, res)
 
     if (subscription.status === 'canceled') return errorResponseHandler("Subscription already cancelled", 400, res)
-    if (subscription.id !== subscriptionId) return errorResponseHandler("Invalid subscription ID", 400, res)
+    if (subscription.id !== user.subscriptionId) return errorResponseHandler("Invalid subscription ID", 400, res)
 
     await stripe.subscriptions.cancel(subscription.id as string)
     await companyModels.findByIdAndUpdate(id,

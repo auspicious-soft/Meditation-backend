@@ -13,5 +13,5 @@ router.put("/update-company", updateCompany);
 router.delete("/delete-company/:id", deleteCompanyById);
 
 router.post("/create-subscription/:id", createSubscription);
-router.post("/cancel-subscription/:subscriptionId", cancelSubscription);
+router.post("/cancel-subscription/:id", cancelSubscription);
 export { router }

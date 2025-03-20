@@ -55,9 +55,10 @@ export const sendUserVerificationEmail = async (email: string, verificationCode:
 
 
 export const subscriptionExpireReminder = async (payload: any) => {
+  console.log('payload: ', payload);
   await resend.emails.send({
       from: process.env.COMPANY_RESEND_GMAIL_ACCOUNT as string,
-      to: payload.email,
+      to: "mansi@auspicioussoft.com",
       subject: "Subscription Expiry Reminder",
       text: `Hello ${payload.name },
 

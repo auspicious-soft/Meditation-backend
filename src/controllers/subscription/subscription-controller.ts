@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import mongoose from 'mongoose';
 import { httpStatusCode } from 'src/lib/constant';
 import { errorParser } from 'src/lib/errors/error-response-handler';
-import { afterSubscriptionCreatedService, cancelSubscriptionService, createSubscriptionService, getAllCouponsService, getAllSubscriptions, getPricesService, getSubscriptionById, subscriptionExpireInAWeekService, updatePricesService } from 'src/services/subscription/subscription-service';
+import { afterSubscriptionCreatedService, cancelSubscriptionService, createSubscriptionService, getAllCouponsService, getAllSubscriptions, getPricesService, getSubscriptionById, subscriptionExpireInAWeekService, subscriptionExpireRemainderService, updatePricesService } from 'src/services/subscription/subscription-service';
 
 export const updatePrices = async (req: any, res: Response) => {
   try {
@@ -139,9 +139,17 @@ export const afterSubscriptionCreated = async (req: Request, res: Response) => {
 }
 export const cancelSubscription = async (req: Request, res: Response) => {
   try {
-    const userId="67ad838627a8b4067711343a"
-      const response = await cancelSubscriptionService(userId, req.params.subscriptionId, res)
+      const response = await cancelSubscriptionService( req.params.id, res)
       return res.status(httpStatusCode.CREATED).json(response)
+  } catch (error) {
+      const { code, message } = errorParser(error)
+      return res.status(code || httpStatusCode.INTERNAL_SERVER_ERROR).json({ success: false, message: message || "An error occurred" });
+  }
+}
+export const subscriptionExpireRemainder = async (req: Request, res: Response) => {
+  try {
+      const response = await subscriptionExpireRemainderService(req.params.id, res)
+      return res.status(httpStatusCode.OK).json(response)
   } catch (error) {
       const { code, message } = errorParser(error)
       return res.status(code || httpStatusCode.INTERNAL_SERVER_ERROR).json({ success: false, message: message || "An error occurred" });

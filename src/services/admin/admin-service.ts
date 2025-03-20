@@ -240,30 +240,47 @@ export const deleteAUserService = async (id: string, res: Response) => {
 
 // Dashboard
 export const getDashboardStatsService = async (payload: any, res: Response) => {
-  // const ongoingProjectCount = await projectsModel.countDocuments({status: { $ne: "1" } });
-  // const completedProjectCount = await projectsModel.countDocuments({status: "1" });
-  // const workingProjectDetails = await projectsModel.find({status: { $ne: "1" } }).select("projectName projectimageLink projectstartDate projectendDate status"); // Adjust the fields as needed
-  // const sevenDaysAgo = new Date(new Date().setDate(new Date().getDate() - 7));
-  // const recentProjectDetails = await projectsModel.find({createdAt: { $gte: sevenDaysAgo } }).select("projectName projectimageLink projectstartDate projectendDate"); // Adjust the fields as needed
-  // const response = {
-  //     success: true,
-  //     message: "Dashboard stats fetched successfully",
-  //     data: {
-  //       ongoingProjectCount,
-  //       completedProjectCount,
-  //       workingProjectDetails,
-  //       recentProjectDetails,
-  //     }
-  // };
-  // return response;
+    const today = new Date();
+    const nextWeek = new Date();
+    nextWeek.setDate(today.getDate() + 7);
+
+    const companies = await companyModels.find({
+      subscriptionExpiryDate: {
+        $gte: today,
+        $lte: nextWeek,
+      },
+    });
+    // const recentUsers = await companyModels.find({ createdAt: { $gte: new Date(new Date().setDate(new Date().getDate() - 15)) } });
+    const recentUsers = await companyModels.find().sort({ createdAt: -1 }).limit(10);
+    if (!recentUsers){
+      return {
+        success: true,
+        message: "No users created in the last 15 days",
+        data: [],
+      };
+    }
+    if (!companies){
+      return {
+        success: true,
+        message: "No companies found with subscriptions expiring within a week",
+        data: [],
+      };
+    }
+
+    return {
+      success: true,
+      message: "Dashboard fetched successfully",
+      data: {companies, recentUsers},
+    };
+  
 };
 
 export const AnalyticsService = async ( res: Response) => {
   const totalUser = await usersModel.countDocuments();
   const activeUsers = await usersModel.countDocuments({isAccountActive: true});
   const newUser = await usersModel.countDocuments({createdAt: { $gte: new Date(new Date().setDate(new Date().getDate() - 7)) }});
-  const totalDownload = 1220;
-  const totalAudioPlays = 1220;
+  const totalDownload = 0;
+  const totalAudioPlays = 0;
   const allSubscription = await getAllSubscriptions()
   const subscriptionExpireToday = allSubscription.filter((sub) => new Date(sub.current_period_end) === new Date(new Date().setDate(new Date().getDate() + 1)))
   // const paymentToday = allSubscription.filter((sub) => new Date(sub.created) === new Date(new Date().setDate(new Date().getDate() )))
