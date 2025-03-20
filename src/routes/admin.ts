@@ -10,7 +10,7 @@ import { verifyOtpPasswordReset } from "src/controllers/user/user";
 import { checkAuth } from "src/middleware/check-auth";
 import { newPassswordAfterOTPVerifiedService } from "src/services/admin/admin-service";
 import { deleteCollection } from "src/controllers/collection/collection-controller";
-import { getAllCoupons, getAllSubscriptionsHandler, getPrices, getSubscriptionByIdHandler, updatePrices } from "src/controllers/subscription/subscription-controller";
+import { getAllCoupons, getAllSubscriptionsHandler, getPrices, getSubscriptionByIdHandler, subscriptionExpireInAWeek, updatePrices } from "src/controllers/subscription/subscription-controller";
 
 
 
@@ -32,5 +32,6 @@ router.get('/prices', getPrices);
 router.get('/coupons', getAllCoupons);
 router.get('/subscriptions', getAllSubscriptionsHandler);
 router.get('/subscriptions/:subscriptionId', getSubscriptionByIdHandler);
+router.get('/subscriptions-expire-in-a-week', subscriptionExpireInAWeek);
 
 export { router }

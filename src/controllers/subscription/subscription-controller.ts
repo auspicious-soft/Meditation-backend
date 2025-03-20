@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { httpStatusCode } from 'src/lib/constant';
 import { errorParser } from 'src/lib/errors/error-response-handler';
-import { getAllCouponsService, getAllSubscriptions, getPricesService, getSubscriptionById, updatePricesService } from 'src/services/subscription/subscription-service';
+import { getAllCouponsService, getAllSubscriptions, getPricesService, getSubscriptionById, subscriptionExpireInAWeekService, updatePricesService } from 'src/services/subscription/subscription-service';
 
 export const updatePrices = async (req: any, res: Response) => {
   try {
@@ -87,3 +87,20 @@ export const getAllCoupons = async (req: Request, res: Response) => {
       });
     }
   }
+
+  export const subscriptionExpireInAWeek = async (req: Request, res: Response) => {
+    try {
+      const response = await subscriptionExpireInAWeekService();
+      // return res.status(response.httpStatusCode).json(response);
+      res.status(200).json({
+        success: true,
+        data: response,
+      });
+    } catch (error: any) {
+      const { code, message } = errorParser(error);
+      return res.status(code || httpStatusCode.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        message: message || "An error occurred while retrieving the companies",
+      });
+    }
+  };

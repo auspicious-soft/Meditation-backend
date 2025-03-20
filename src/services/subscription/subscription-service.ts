@@ -283,3 +283,26 @@ export async function getSubscriptionById(subscriptionId: string) {
 		canceled_at: subscription.canceled_at || undefined,
 	};
 }
+
+export async function subscriptionExpireInAWeekService() {
+	const subscriptions = await getAllSubscriptions();
+
+	const expiringSubscriptions = subscriptions.filter((subscription) => {
+		const currentPeriodEnd = subscription.current_period_end;
+
+		if (!currentPeriodEnd) {
+			return false;
+		}
+
+		const expirationDate = new Date(currentPeriodEnd * 1000);
+		const today = new Date();
+
+		// Set both expirationDate and today to midnight (removing time part)	
+		expirationDate.setHours(0, 0, 0, 0);
+		today.setHours(0, 0, 0, 0);
+
+		return expirationDate.getTime() - today.getTime() <= 7 * 24 * 60 * 60 * 1000; // 7 days in milliseconds
+	});
+
+	return expiringSubscriptions;
+}
