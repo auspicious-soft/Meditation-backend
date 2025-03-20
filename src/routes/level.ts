@@ -3,8 +3,8 @@ import { createLevel, deleteLevel, getAllLevels, getLevelById, updateLevel } fro
 
 const router = Router();
 
-router.post("/", createLevel);
+
 router.get("/", getAllLevels);
-router.route("/:id").get(getLevelById).put( updateLevel).delete(deleteLevel);
+router.route("/:id").get(getLevelById).put( updateLevel);
 
 export {router}

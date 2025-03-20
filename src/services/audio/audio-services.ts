@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { httpStatusCode } from "src/lib/constant";
 import { errorResponseHandler } from "src/lib/errors/error-response-handler";
 import { AudioModel } from "src/models/audio/audio-schema";
+import { collectionModel } from "src/models/collection/collection-schema";
 
 const capitalizeFirstLetter = (string: string) => {
   if (!string) return string;
@@ -33,6 +34,16 @@ export const uploadAudioService = async(req : Request, res : Response)=>{
           res
         );
       }
+    }
+
+    // Check if collectionType exists in CollectionModel
+    const collectionExists = await collectionModel.findById(collectionType);
+    if (!collectionExists) {
+      return errorResponseHandler(
+        "Invalid collection type. Collection not found",
+        httpStatusCode.BAD_REQUEST,
+        res
+      );
     }
     
     // Create new audio entry

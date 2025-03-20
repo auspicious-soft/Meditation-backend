@@ -30,8 +30,6 @@ export const companyCreateService = async (
     );
   }
 
-  
-
   let existingUser = null;
   for (const schema of schemas) {
     existingUser = await (schema as any).findOne({ email });

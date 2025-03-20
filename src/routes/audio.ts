@@ -3,8 +3,8 @@ import { deleteAudio, getAllAudio, getAudioById, updateAudio, uploadAudio } from
 
 const router = Router()
 
-router.post("/",uploadAudio)
+
 router.get("/", getAllAudio);
-router.route("/:id").get(getAudioById).put(updateAudio).delete(deleteAudio);
+router.route("/:id").get(getAudioById).put(updateAudio)
 
 export {router}

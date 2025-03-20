@@ -5,7 +5,7 @@ import { createCompany, deleteCompanyById, getAllCompanies, getCompanyById, upda
 
 const router = Router();
 
-router.post("/create-company", createCompany);
+
 router.get("/get-all-companies", getAllCompanies);
 router.get("/get-company-by-id/:id", getCompanyById);
 router.put("/update-company", updateCompany);

@@ -8,7 +8,7 @@ import mongoose from "mongoose";
 import { AudioModel } from "src/models/audio/audio-schema";
 
 export const createCollectionService = async (req: Request, res: Response) => {
-  const { name, image, levels, bestFor,description } = req.body;
+  const { name, imageUrl, levels, bestFor,description } = req.body;
 
   console.log("Received levels:", levels);
   console.log("Received bestFor:", bestFor);
@@ -68,7 +68,7 @@ export const createCollectionService = async (req: Request, res: Response) => {
 
   const newCollection = new collectionModel({
     name,
-    image,
+    imageUrl,
     levels: levels || [],
     bestFor,
     description,
