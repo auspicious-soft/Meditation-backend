@@ -108,7 +108,7 @@ export const getUserInfoByEmail = async (req: Request, res: Response) => {
         return res.status(code || httpStatusCode.INTERNAL_SERVER_ERROR).json({ success: false, message: message || "An error occurred" });
     }
 }
-
+   
 export const editUserInfo = async (req: Request, res: Response) => {
     try {
         const response = await editUserInfoService(req.params.id, req.body, res);

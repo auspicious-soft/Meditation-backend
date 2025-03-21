@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { createCompany, deleteCompanyById, getAllCompanies, getCompanyById, updateCompany } from "src/controllers/company/company";
+import { createJoinRequest, deleteJoinRequest, getAllJoinRequests, getJoinRequestById, updateJoinRequest } from "src/controllers/join-requests/join-requests-controller";
 import { getAllNotificationsOfUser, markAllNotificationsAsRead, markSingleNotificationAsRead } from "src/controllers/notifications/notifications-controller";
 import { cancelSubscription, createSubscription } from "src/controllers/subscription/subscription-controller";
 import { createUser, deactivateUser, deleteUser, editUserInfo, getAllUserForCompany, getUserInfo } from "src/controllers/user/user";
@@ -25,5 +26,11 @@ router.route("/users").post(createUser).get(getAllUserForCompany);
 router.route("/users/:id").get(getUserInfo).put(editUserInfo).delete(deleteUser);
 router.patch("/users/:id/deactivate", deactivateUser);
 
+//join-requests routes
+router.post("/join-requests", createJoinRequest);
+router.get("/join-requests/:id", getJoinRequestById);
+router.get("/join-requests", getAllJoinRequests);
+router.put("/join-requests/:id", updateJoinRequest);
+router.delete("/join-requests/:id", deleteJoinRequest);
 
 export { router }

@@ -64,6 +64,10 @@ const usersSchema = new mongoose.Schema(
     emailVerified:{
       type: Boolean,
       default: false,
+    },
+    isVerifiedByCompany:{
+      type:Boolean,
+      default:false
     }
   },
   { timestamps: true }

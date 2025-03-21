@@ -11,50 +11,110 @@ import { customAlphabet } from "nanoid"
 import { companyModels } from "src/models/company/company-schema";
 import { queryBuilder } from "src/utils";
 import { passwordResetTokenModel } from "src/models/password-token-schema";
+import { createJoinRequestService } from "../join-requests/join-requests-service";
+import { joinRequestsModel } from "src/models/join-requests/join-requests-schema";
 
-const schemas = [usersModel, companyModels,adminModel]; 
+const schemas = [usersModel, companyModels, adminModel]; 
+
+// export const signupService = async (payload: any, res: Response) => {
+//    const {email,lastName,firstName,password,dob,gender,companyName} = payload
+
+//    let existingUser = null;
+//   for (const schema of schemas) {
+//     existingUser = await (schema as any).findOne({ email });
+//     if (existingUser) break;
+//   }
+
+//   if (existingUser) {
+//     return errorResponseHandler("User email already exists", httpStatusCode.CONFLICT, res);
+//   }
+//     const hashedPassword = await bcrypt.hash(password, 10)
+//     const identifier = customAlphabet("0123456789", 5);
+//     const newUser = new usersModel({
+//         identifier: identifier(),
+//         email,  
+//         firstName,
+//         lastName,
+//         password: hashedPassword,
+//         dob: new Date(dob).toISOString().slice(0, 10),
+//         gender,
+//         companyName
+//     })
+//      await newUser.save()
+
+    
+//      const userData = newUser.toObject() as any;
+//      delete userData.password;
+//     // const EmailVerificationToken = await generatePasswordResetToken(userData.email);
+//     // if(EmailVerificationToken){
+//     //     await sendUserVerificationEmail(userData.email, EmailVerificationToken.token);
+//     // }else{
+//     //     return errorResponseHandler("Failed to send email verification", httpStatusCode.INTERNAL_SERVER_ERROR, res)
+//     // }
+//     return {
+//         success: true,
+//         message: "Email verification code send successfully verify email to signup successfully",
+//         data: userData
+//     }
+// }
 
 export const signupService = async (payload: any, res: Response) => {
-   const {email,lastName,firstName,password,dob,gender,companyName} = payload
+    const { email, lastName, firstName, password, dob, gender, companyName } = payload;
+    console.log('companyName: ', companyName);
 
-   let existingUser = null;
-  for (const schema of schemas) {
-    existingUser = await (schema as any).findOne({ email });
-    if (existingUser) break;
-  }
+    // Check if the company exists
+    const company = await companyModels.find( {companyName});
+    if (company===null || company.length===0) {
+        return errorResponseHandler("Company not found", httpStatusCode.NOT_FOUND, res);
+    }
 
-  if (existingUser) {
-    return errorResponseHandler("User email already exists", httpStatusCode.CONFLICT, res);
-  }
-    const hashedPassword = await bcrypt.hash(password, 10)
+    // Check if the user already exists
+    let existingUser = null;
+    for (const schema of schemas) {
+        existingUser = await (schema as any).findOne({ email });
+        if (existingUser ) break;
+    }
+    const joinRequest = await joinRequestsModel.find({userId:existingUser?._id})
+    if (existingUser && existingUser.role !=="user") {
+        return errorResponseHandler("User email already exists", httpStatusCode.CONFLICT, res);
+    }
+    if (existingUser && existingUser.role =="user" && existingUser.emailVerified === true) {
+        return errorResponseHandler("Email already exist, try Login", httpStatusCode.CONFLICT, res);
+    }
+    if (existingUser && existingUser.role =="user" && existingUser.emailVerified === false && joinRequest ) {
+        const result = await createJoinRequestService({companyId:company[0]?._id, userId:existingUser._id})
+        return { success: true, message: result.message };
+    }
+
+    // Hash the password
+    const hashedPassword = await bcrypt.hash(password, 10);
     const identifier = customAlphabet("0123456789", 5);
+
+    // Create a new user
     const newUser = new usersModel({
         identifier: identifier(),
-        email,  
+        email,
         firstName,
         lastName,
         password: hashedPassword,
         dob: new Date(dob).toISOString().slice(0, 10),
         gender,
-        companyName
-    })
-     await newUser.save()
-
+        companyName: company[0]?.companyName,
+    });
     
-     const userData = newUser.toObject() as any;
+    await newUser.save();
+    const result = await createJoinRequestService({companyId:company[0]?._id,userId:newUser?._id})
+    const userData = newUser.toObject() as any;
     delete userData.password;
-    const EmailVerificationToken = await generatePasswordResetToken(userData.email);
-    if(EmailVerificationToken){
-        await sendUserVerificationEmail(userData.email, EmailVerificationToken.token);
-    }else{
-        return errorResponseHandler("Failed to send email verification", httpStatusCode.INTERNAL_SERVER_ERROR, res)
-    }
+
     return {
         success: true,
-        message: "Email verification code send successfully verify email to signup successfully",
-        data: userData
-    }
-}
+        message: "Email verification code sent successfully. Verify email to complete signup.",
+        data: {
+            user: userData,
+        },
+    };
+};
 
 export const verifyEmailService = async (req: any, res: Response) => {
     const {token} = req.body
