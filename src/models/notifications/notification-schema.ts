@@ -5,6 +5,10 @@ const notificationsSchema = new Schema({
         type: [Schema.ObjectId],
         ref: "company",
     },
+    type: {
+        type: String,
+        required: true
+    },
     title: {
         type: Object,
         required: true
