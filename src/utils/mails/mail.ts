@@ -74,3 +74,24 @@ ${process.env.COMPANY_NAME} Team`
 });
 };
 // Renew Now: ${payload.renewalLink}
+
+export const sendUserLoginCredentialsEmail = async (email: string, firstName: string,lastName:string, password: string, companyName: string) => {
+  return await resend.emails.send({
+    from: process.env.COMPANY_RESEND_GMAIL_ACCOUNT as string,
+    // to: email,
+    to: "mansi@auspicioussoft.com",
+    subject: "Your Login Credentials",
+    html: `
+      <h3>Your Login Credentials</h3>
+      <p>Hello ${firstName} ${lastName},</p>
+      <p>Your account has been successfully created. Please use the following credentials to log in:</p>
+      <p><strong>Username:</strong> ${email}</p>
+      <p><strong>Password:</strong> ${password}</p>
+      <p>We recommend you change your password after logging in for security purposes.</p>
+      <p>If you did not request this, please ignore this email or contact our support team.</p>
+      <br>
+      <p>Best regards,</p>
+      <p>The ${companyName} Team</p>
+    `,
+  });
+}

@@ -3,7 +3,6 @@ import { httpStatusCode } from "src/lib/constant";
 import { errorResponseHandler } from "src/lib/errors/error-response-handler";
 import { companyModels } from "src/models/company/company-schema";
 import { notificationsModel } from "src/models/notifications/notification-schema";
-import { usersModel } from "src/models/user/user-schema";
 // import { NotificationPayload, sendNotification } from "src/utils/FCM/FCM";
 
 export const sendNotificationToUsersService = async (payload: any, res: Response) => {
@@ -133,10 +132,35 @@ export const getAllNotificationsOfUserService = async (id: string, res: Response
 
 export const markAllNotificationsAsReadService = async (id: string, res: Response) => {
     try {
+        //TODO : change this to user id from token
         const user = await companyModels.findById(id);
         if (!user) return errorResponseHandler("User not found", httpStatusCode.NOT_FOUND, res);
         const notifications = await notificationsModel
         .find({ userIds: id, read: false })
+        .select("-__v -userIds");
+
+        if (!notifications.length) {
+            return errorResponseHandler("No notifications found", httpStatusCode.NO_CONTENT, res);
+        }
+
+        await notificationsModel.updateMany(
+            { userIds: id, read: false },
+            { $set: { read: true } }
+        );
+
+        return { success: true, message: "Notifications marked as read successfully" };
+    } catch (error) {
+        console.error('Error in markAllNotificationsAsReadService:', error);
+        throw error;
+    }
+};
+export const markSingleNotificationAsReadService = async (id: string,payload: any, res: Response) => {
+    try {
+        //TODO : change this to user id from token
+        const user = await companyModels.findById(id);
+        if (!user) return errorResponseHandler("User not found", httpStatusCode.NOT_FOUND, res);
+        const notifications = await notificationsModel
+        .find({ userIds: id,_id:payload.id, read: false })
         .select("-__v -userIds");
 
         if (!notifications.length) {

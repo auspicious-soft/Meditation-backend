@@ -1,7 +1,8 @@
 import { Router } from "express";
 import { createCompany, deleteCompanyById, getAllCompanies, getCompanyById, updateCompany } from "src/controllers/company/company";
-import { getAllNotificationsOfUser, markAllNotificationsAsRead } from "src/controllers/notifications/notifications-controller";
+import { getAllNotificationsOfUser, markAllNotificationsAsRead, markSingleNotificationAsRead } from "src/controllers/notifications/notifications-controller";
 import { cancelSubscription, createSubscription } from "src/controllers/subscription/subscription-controller";
+import { createUser, deactivateUser, deleteUser, editUserInfo, getAllUserForCompany, getUserInfo } from "src/controllers/user/user";
 
 
 
@@ -17,5 +18,12 @@ router.post("/create-subscription/:id", createSubscription);
 router.post("/cancel-subscription/:id", cancelSubscription);
 //notifications route
 router.route("/:id/notifications").get( getAllNotificationsOfUser).put( markAllNotificationsAsRead)
+router.route("/:id/notifications/mark-as-read").put(markSingleNotificationAsRead)
+
+//user routes
+router.route("/users").post(createUser).get(getAllUserForCompany);
+router.route("/users/:id").get(getUserInfo).put(editUserInfo).delete(deleteUser);
+router.patch("/users/:id/deactivate", deactivateUser);
+
 
 export { router }

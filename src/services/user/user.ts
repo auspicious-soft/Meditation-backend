@@ -4,7 +4,7 @@ import { usersModel } from "../../models/user/user-schema"
 import bcrypt from "bcryptjs"
 import { adminModel } from "../../models/admin/admin-schema";
 import { generatePasswordResetToken, generatePasswordResetTokenByPhone, getPasswordResetTokenByToken } from "../../utils/mails/token"
-import { sendPasswordResetEmail, sendUserSignupEmail, sendUserVerificationEmail } from "../../utils/mails/mail"
+import { sendPasswordResetEmail, sendUserLoginCredentialsEmail, sendUserSignupEmail, sendUserVerificationEmail } from "../../utils/mails/mail"
 import { generatePasswordResetTokenByPhoneWithTwilio } from "../../utils/sms/sms"
 import { httpStatusCode } from "../../lib/constant"
 import { customAlphabet } from "nanoid"
@@ -92,7 +92,7 @@ export const editUserInfoService = async (id: string, payload: any, res: Respons
       }    
 
     const updateduser = await usersModel.findByIdAndUpdate(id,{ ...payload },{ new: true});
-
+    if (!updateduser) return errorResponseHandler("User not found", httpStatusCode.NOT_FOUND, res);
     return {
         success: true,
         message: "User updated successfully",
@@ -244,6 +244,104 @@ export const passwordResetService = async (req: Request, res: Response) => {
     }
 }
 
+// Create a new user
+export const createUserService = async (payload: any, res: Response) => {
+    const { email, firstName, lastName, password, dob, gender, companyName} = payload;
+
+    const existingUser = await usersModel.findOne({ email });
+    if (existingUser) return errorResponseHandler("User email already exists", httpStatusCode.CONFLICT, res);
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const identifier = customAlphabet("0123456789", 5);
+    const newUser = new usersModel({
+        identifier: identifier(),
+        email,
+        firstName,
+        lastName,
+        password: hashedPassword,
+        dob: new Date(dob).toISOString().slice(0, 10),
+        gender,
+        companyName
+    });
+    await newUser.save(); 
+    await sendUserLoginCredentialsEmail(email,firstName ,lastName, password , companyName);
+    const userData = newUser.toObject();
+
+    return {
+        success: true,
+        message: "User created successfully",
+        data: userData
+    };
+};
+
+// Read user by ID
+export const getUserForCompanyService = async (id: string, res: Response) => {
+    const user = await usersModel.findById(id);
+    if (!user) return errorResponseHandler("User not found", httpStatusCode.NOT_FOUND, res);
+
+    return {
+        success: true,
+        message: "User fetched successfully",
+        data: user
+    };
+};
+export const getAllUserForCompanyService = async (payload:any, res: Response) => {
+    //TODO : change this to user id FOR COMPANY NAME  from token
+    const users = await usersModel.find({companyName:payload.companyName});
+    if (!users) return errorResponseHandler("User not found", httpStatusCode.NOT_FOUND, res);
+
+    return {
+        success: true,
+        message: "User fetched successfully",
+        data: users
+    };
+};
+
+// // Update user by ID
+// export const updateUserService = async (id: string, payload: any, res: Response) => {
+//     const user = await usersModel.findById(id);
+//     if (!user) return errorResponseHandler("User not found", httpStatusCode.NOT_FOUND, res);
+
+//     if (payload.password) {
+//         payload.password = await bcrypt.hash(payload.password, 10);
+//     }
+
+//     const updatedUser = await usersModel.findByIdAndUpdate(id, { ...payload }, { new: true });
+//     return {
+//         success: true,
+//         message: "User updated successfully",
+//         data: updatedUser
+//     };
+// };
+
+// Delete user by ID
+export const deleteUserService = async (id: string, res: Response) => {
+    const user = await usersModel.findByIdAndDelete(id);
+    if (!user) return errorResponseHandler("User not found", httpStatusCode.NOT_FOUND, res);
+
+    return {
+        success: true,
+        message: "User deleted successfully"
+    };
+};
+export const deactivateUserService = async (id: string, res: Response) => {
+    try {
+        const user = await usersModel.findById(id);
+        if (!user) return errorResponseHandler("User not found", httpStatusCode.NOT_FOUND, res);
+
+        // Toggle the isActive field
+        user.isAccountActive = !user.isAccountActive;
+        await user.save();
+
+        return {
+            success: true,
+            message: `User ${user.isAccountActive ? "activated" : "deactivated"} successfully`,
+        };
+    } catch (error) {
+        console.error("Error in deactivateUserService:", error);
+        return errorResponseHandler("An error occurred", httpStatusCode.INTERNAL_SERVER_ERROR, res);
+    }
+};
 
 // Dashboard
 export const getDashboardStatsService = async (payload: any, res: Response) => {
