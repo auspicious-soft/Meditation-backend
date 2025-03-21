@@ -19,4 +19,7 @@ router.get("/get-all-users", getAllUsers);
 router.get("/dashboard", checkAuth, getDashboardStats);
 router.route("/:id").get(getUserInfo).put(editUserInfo);
 
+
+
+
 export { router };

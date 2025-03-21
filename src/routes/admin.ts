@@ -11,6 +11,7 @@ import { createCompany } from "src/controllers/company/company";
 import { createBestFor, deleteBestFor } from "src/controllers/bestfor/bestfor-controller";
 import { createLevel, deleteLevel } from "src/controllers/level/level-controller";
 import { getAllCoupons, getAllSubscriptionsHandler, getPrices, getSubscriptionByIdHandler, subscriptionExpireInAWeek, subscriptionExpireRemainder, updatePrices } from "src/controllers/subscription/subscription-controller";
+import { sendNotificationToUser, sendNotificationToUsers } from "src/controllers/notifications/notifications-controller";
 
 const router = Router();
 
@@ -28,8 +29,10 @@ router.get("/dashboard", getDashboardStats)
 
 //Analysis
 router.get("/analysis", getAnalytics)
+
 //plan expire remainder
 router.post("/subscription-expire-remainder/:id", subscriptionExpireRemainder)
+
 //stripe
 router.post('/update-prices', updatePrices);
 router.get('/prices', getPrices);
@@ -37,5 +40,9 @@ router.get('/coupons', getAllCoupons);
 router.get('/subscriptions', getAllSubscriptionsHandler);
 router.get('/subscriptions/:subscriptionId', getSubscriptionByIdHandler);
 router.get('/subscriptions-expire-in-a-week', subscriptionExpireInAWeek);
+
+//notifications route
+router.post("/send-notification", sendNotificationToUsers)
+router.post("/send-notification-to-specific-users", sendNotificationToUser)
 
 export { router }
