@@ -56,7 +56,7 @@ export const loginService = async (payload: any, req: any, res: Response) => {
   if (isMobileApp) {
     token = jwt.sign(
       { id: user._id, role: user.role },
-      process.env.MOBILE_JWT_SECRET as string      
+      process.env.JWT_SECRET_PHONE as string      
     );
   }
 

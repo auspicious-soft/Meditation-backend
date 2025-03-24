@@ -467,7 +467,7 @@ export const afterSubscriptionCreatedService = async (payload: any, transaction:
     const sig = payload.headers['stripe-signature'];
     let checkSignature: Stripe.Event;
     try {
-        checkSignature = stripe.webhooks.constructEvent(payload.rawBody, sig, process.env.STRIPE_LOCAL_WEBHOOK_SECRET as string);
+        checkSignature = stripe.webhooks.constructEvent(payload.rawBody, sig, process.env.STRIPE_WEBHOOK_SECRET as string);
     } catch (err: any) {
         console.log(`❌ Error message: ${err.message}`);
         res.status(400).send(`Webhook Error: ${err.message}`);
