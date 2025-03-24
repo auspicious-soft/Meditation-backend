@@ -22,6 +22,7 @@ const connectDB = async () => {
       else {
         console.error("Max retry attempts reached. Exiting...");
         process.exit(1);
+        
       }
     }
   };
