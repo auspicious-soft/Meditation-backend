@@ -8,6 +8,8 @@ import { customAlphabet } from "nanoid";
 import { queryBuilder } from "src/utils";
 import { adminModel } from "src/models/admin/admin-schema";
 import { usersModel } from "src/models/user/user-schema";
+import stripe from "src/configF/stripe";
+import Stripe from "stripe";
 
 const schemas = [adminModel, usersModel, companyModels]; // Add all schemas to the array
 
@@ -192,4 +194,143 @@ export const deleteCompanyService = async (id: string, res: Response) => {
     message: "Company deleted successfully",
     statusCode: httpStatusCode.OK,
   };
+};
+
+export const getCompanyDashboardService = async (id: string, res: Response) => {
+  try {
+    const company = await companyModels.findById(id);
+    if (!company) {
+      return errorResponseHandler(
+        "Company not found",
+        httpStatusCode.NOT_FOUND,
+        res
+      );
+    }
+
+    const companyCustomerId = company.stripeCustomerId;
+    if (!companyCustomerId) {
+      return errorResponseHandler(
+        "Stripe customer ID not found for the company",
+        httpStatusCode.BAD_REQUEST,
+        res
+      );
+    }
+
+    // Fetch transactions using the Stripe customer ID
+    const companyTransactions = await getSubscriptionsByCustomer(companyCustomerId);
+    console.log("companyTransactions: ", companyTransactions);
+    const recentUsers = await usersModel.find({companyName:company.companyName}).sort({ createdAt: -1 }).limit(10);
+  
+    return {
+      success: true,
+      message: "Company dashboard data fetched successfully",
+      data: {
+        // company,
+        transactions: companyTransactions,  
+        recentUsers
+      },
+      statusCode: httpStatusCode.OK,
+
+    };
+  } catch (error) {
+    console.error("Error in getCompanyDashboardService:", error);
+    return errorResponseHandler(
+      "Failed to fetch company dashboard data",
+      httpStatusCode.INTERNAL_SERVER_ERROR,
+      res
+    );
+  }
+};
+
+
+// Explicitly define the params type to include 'customer'
+interface CustomBalanceTransactionListParams extends Stripe.BalanceTransactionListParams {
+  customer?: string; // Add customer as an optional field
+}
+// export const getSubscriptionsByCustomer = async (
+//   customerId: string
+// ): Promise<Stripe.Subscription[]> => {
+//   console.log('customerId: ', customerId);
+//   try {
+//     // Define params for listing subscriptions
+//     const subscriptionParams: Stripe.SubscriptionListParams = {
+//       customer: customerId,
+//       limit: 100, // Maximum limit per request
+//     };
+
+//     // Fetch initial set of subscriptions
+//     const subscriptions = await stripe.subscriptions.list(subscriptionParams);
+//     let allSubscriptions: Stripe.Subscription[] = subscriptions.data;
+
+//     // Handle pagination if there are more subscriptions
+//     while (subscriptions.has_more) {
+//       const nextParams: Stripe.SubscriptionListParams = {
+//         customer: customerId,
+//         limit: 100,
+//         starting_after: allSubscriptions[allSubscriptions.length - 1].id,
+//       };
+//       const nextSubscriptions = await stripe.subscriptions.list(nextParams);
+//       allSubscriptions = [...allSubscriptions, ...nextSubscriptions.data];
+//       subscriptions.has_more = nextSubscriptions.has_more;
+//     }
+
+//     return allSubscriptions;
+//   } catch (error) {
+//     console.error('Error fetching subscriptions:', error);
+//     throw new Error('Failed to retrieve customer subscriptions');
+//   }
+// };
+
+
+export const getSubscriptionsByCustomer = async (
+  customerId: string
+) => {
+  console.log('customerId: ', customerId);
+  try {
+    // Define params for listing subscriptions
+    const subscriptionParams: Stripe.SubscriptionListParams = {
+      customer: customerId,
+      limit: 100, // Maximum limit per request
+      expand: ['data.customer'], // Expand customer data to get email and name
+    };
+
+    // Fetch initial set of subscriptions
+    const subscriptions = await stripe.subscriptions.list(subscriptionParams);
+    let allSubscriptions: Stripe.Subscription[] = subscriptions.data;
+
+    // Handle pagination if there are more subscriptions
+    while (subscriptions.has_more) {
+      const nextParams: Stripe.SubscriptionListParams = {
+        customer: customerId,
+        limit: 100,
+        starting_after: allSubscriptions[allSubscriptions.length - 1].id,
+        expand: ['data.customer'], // Expand customer data in paginated requests
+      };
+      const nextSubscriptions = await stripe.subscriptions.list(nextParams);
+      allSubscriptions = [...allSubscriptions, ...nextSubscriptions.data];
+      subscriptions.has_more = nextSubscriptions.has_more;
+    }
+
+    // Map subscriptions to the required details
+    const subscriptionDetails: any[] = allSubscriptions.map((sub) => {
+      // Extract customer data (expanded via 'data.customer')
+      const customer = sub.customer as Stripe.Customer | string;
+      const customerData: Stripe.Customer | {} = typeof customer === 'string' ? {} : customer;
+
+      return {
+        id: sub.id,
+        planName: sub.items.data[0]?.plan?.nickname || sub.items.data[0]?.plan?.id || 'Unknown Plan', 
+        price: sub.items.data[0]?.plan?.amount ? sub.items.data[0].plan.amount / 100 : null,
+        username: 'name' in customerData && customerData.name !== null ? customerData.name : undefined, 
+        email: 'email' in customerData && customerData.email !== null ? customerData.email : undefined, 
+        purchaseDate: new Date(sub.created * 1000).toISOString(), 
+        expiryDate: new Date(sub.current_period_end * 1000).toISOString(),
+      };
+    });
+
+    return subscriptionDetails;
+  } catch (error) {
+    console.error('Error fetching subscriptions:', error);
+    throw new Error('Failed to retrieve customer subscriptions');
+  }
 };

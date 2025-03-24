@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { createCompany, deleteCompanyById, getAllCompanies, getCompanyById, updateCompany } from "src/controllers/company/company";
+import { createCompany, deleteCompanyById, getAllCompanies, getCompanyById, getCompanyDashboard, updateCompany } from "src/controllers/company/company";
 import { createJoinRequest, deleteJoinRequest, getAllJoinRequests, getJoinRequestById, updateJoinRequest } from "src/controllers/join-requests/join-requests-controller";
 import { getAllNotificationsOfUser, markAllNotificationsAsRead, markSingleNotificationAsRead } from "src/controllers/notifications/notifications-controller";
 import { cancelSubscription, createSubscription } from "src/controllers/subscription/subscription-controller";
@@ -8,7 +8,8 @@ import { createUser, deactivateUser, deleteUser, editUserInfo, getAllUserForComp
 
 
 const router = Router();
-
+//Dashboard routes
+router.get("/dashboard/:id", getCompanyDashboard);
 
 router.get("/get-all-companies", getAllCompanies);
 router.get("/get-company-by-id/:id", getCompanyById);
