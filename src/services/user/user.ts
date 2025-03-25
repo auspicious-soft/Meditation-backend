@@ -65,7 +65,6 @@ const schemas = [usersModel, companyModels, adminModel];
 
 export const signupService = async (payload: any, res: Response) => {
 	const { email, lastName, firstName, password, dob, gender, companyName } = payload;
-	console.log("companyName: ", companyName);
 
 	// Check if the company exists
 	const company = await companyModels.find({ companyName });
@@ -88,7 +87,7 @@ export const signupService = async (payload: any, res: Response) => {
 	}
 	if (existingUser && existingUser.role == "user" && existingUser.emailVerified === false && joinRequest) {
 		const result = await createJoinRequestService({ companyId: company[0]?._id, userId: existingUser._id });
-		return { success: true, message: result.message };
+		return { success: true, message: "Request sent successfully" };
 	}
 
 	// Hash the password
@@ -114,7 +113,7 @@ export const signupService = async (payload: any, res: Response) => {
 
 	return {
 		success: true,
-		message: "Email verification code sent successfully. Verify email to complete signup.",
+		message: "Request sent successfully",
 		data: {
 			user: userData,
 		},
@@ -209,6 +208,20 @@ export const editUserInfoService = async (id: string, payload: any, res: Respons
 		success: true,
 		message: "User updated successfully",
 		data: updateduser,
+	};
+};
+export const resendOtpService = async (email: string, res: Response) => {
+	const userData = await usersModel.find({ email });
+	if (!userData) return errorResponseHandler("User not found", httpStatusCode.NOT_FOUND, res);
+	const EmailVerificationToken = await generatePasswordResetToken(email);
+			if (EmailVerificationToken) {
+				await sendUserVerificationEmail(email, EmailVerificationToken.token);
+			} else {
+				return errorResponseHandler("Failed to send email verification", httpStatusCode.INTERNAL_SERVER_ERROR, res);
+			}
+	return {
+		success: true,
+		message: "Resend otp successfully",
 	};
 };
 

@@ -69,7 +69,12 @@ const usersSchema = new mongoose.Schema(
       type:String,
       enum:["pending","approved","rejected"],
       default:"pending"
-    }
+    },
+    isTermsAccepted: {
+      type: Boolean,
+      default: false,
+    },
+   
   },
   { timestamps: true }
 );

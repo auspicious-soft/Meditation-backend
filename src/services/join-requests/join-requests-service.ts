@@ -21,7 +21,8 @@ export const createJoinRequestService = async (payload: any) => {
 
 	// Create a new join request
 	const newJoinRequest = await joinRequestsModel.create(payload);
-	return { success: true, data: newJoinRequest };
+    console.log('success: true, data: newJoinRequest: ',    newJoinRequest);
+	// return { success: true, data: newJoinRequest };
 };
 
 export const getJoinRequestByIdService = async (id: string, res: Response) => {

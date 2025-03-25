@@ -11,6 +11,7 @@ import { errorParser } from "../../lib/errors/error-response-handler";
 import { httpStatusCode } from "../../lib/constant";
 
 export const createCompany = async (req: Request, res: Response) => {
+  
   try {
     const response = await companyCreateService(req.body, req, res);
     return res.status(httpStatusCode.CREATED).json(response)

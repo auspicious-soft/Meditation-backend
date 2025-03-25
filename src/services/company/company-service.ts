@@ -13,6 +13,71 @@ import Stripe from "stripe";
 
 const schemas = [adminModel, usersModel, companyModels]; // Add all schemas to the array
 
+// export const companyCreateService = async (
+//   payload: any,
+//   req: any,
+//   res: Response
+// ) => {
+//   const { companyName, email, password } = payload;
+
+//   if (
+//     [companyName, email, password].some(
+//       (field) => !field || field.trim() === ""
+//     )
+//   ) {
+//     return errorResponseHandler(
+//       "All fields are required to create a company",
+//       httpStatusCode.BAD_REQUEST,
+//       res
+//     );
+//   }
+
+//   let existingUser = null;
+//   for (const schema of schemas) {
+//     existingUser = await (schema as any).findOne({ email });
+//     if (existingUser) break;
+//   }
+
+//   if (existingUser) {
+//     return errorResponseHandler("email already exists", httpStatusCode.CONFLICT, res);
+//   }
+
+//   // Check if the company name already exists
+//   const existingCompanyName = await companyModels.findOne({ companyName });
+//   if (existingCompanyName) {
+//     return errorResponseHandler(
+//       "Company name already exists",
+//       httpStatusCode.CONFLICT,
+//       res
+//     );
+//   }
+//   // Hash the password
+//   const hashedPassword = await bcrypt.hash(password, 10);
+//   const identifier = customAlphabet("0123456789", 5);
+//   // Create a new company
+//   const newCompany = new companyModels({
+//     companyName,
+//     identifier: identifier(),
+//     email: email.toLowerCase().trim(),
+//     password: hashedPassword,
+//   });
+
+//   // Save the company to the database
+//   await newCompany.save();
+
+//   // Send email to the company
+//   await sendCompanyCreationEmail(email, companyName);
+
+//   const companyData = newCompany.toObject() as any;
+//   delete companyData.password;
+
+//   return {
+//     success: true,
+//     message: "Company created successfully",
+//     data: companyData,
+//   };
+// };
+
 export const companyCreateService = async (
   payload: any,
   req: any,
@@ -51,22 +116,41 @@ export const companyCreateService = async (
       res
     );
   }
+
   // Hash the password
   const hashedPassword = await bcrypt.hash(password, 10);
   const identifier = customAlphabet("0123456789", 5);
-  // Create a new company
+
+  // Create Stripe customer
+  let stripeCustomer;
+  try {
+    stripeCustomer = await stripe.customers.create({
+      email: email.toLowerCase().trim(),
+      name: companyName,
+      description: `Customer for ${companyName}`,
+    });
+  } catch (error) {
+    return errorResponseHandler(
+      "Failed to create Stripe customer",
+      httpStatusCode.INTERNAL_SERVER_ERROR,
+      res
+    );
+  }
+
+  // Create a new company with Stripe customer ID
   const newCompany = new companyModels({
     companyName,
     identifier: identifier(),
     email: email.toLowerCase().trim(),
     password: hashedPassword,
+    stripeCustomerId: stripeCustomer.id, // Add Stripe customer ID to the company model
   });
 
   // Save the company to the database
   await newCompany.save();
 
   // Send email to the company
-  await sendCompanyCreationEmail(email, companyName);
+  await sendCompanyCreationEmail(email, companyName, password);
 
   const companyData = newCompany.toObject() as any;
   delete companyData.password;

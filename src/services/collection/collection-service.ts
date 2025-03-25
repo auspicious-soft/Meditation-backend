@@ -267,7 +267,7 @@ export const updateCollectionService = async (req: Request, res: Response) => {
     
     // Update fields if provided
     if (name) collection.name = name;
-    if (image) collection.image = image;
+    if (image) collection.imageUrl = image;
     if (levels) collection.levels = levels;
     if (bestFor !== undefined) collection.bestFor = bestFor;
     if (isActive !== undefined) collection.isActive = isActive;
