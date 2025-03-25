@@ -32,7 +32,7 @@ export const uploadAudioService = async(req : Request, res : Response)=>{
           "Invalid duration format. Expected format is HH:mm:ss",
           httpStatusCode.BAD_REQUEST,
           res
-        );
+        ); 
       }
     }
 
