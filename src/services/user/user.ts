@@ -363,6 +363,7 @@ export const createUserService = async (payload: any, res: Response) => {
 		companyName,
 	});
 	await newUser.save();
+	console.log('email: ', email);
 	await sendUserLoginCredentialsEmail(email, firstName, lastName, password, companyName);
 	const userData = newUser.toObject();
 

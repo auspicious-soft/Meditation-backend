@@ -2,8 +2,8 @@ import { Resend } from "resend";
 import ForgotPasswordEmail from "./templates/forgot-password-reset";
 import { configDotenv } from "dotenv";
 
-configDotenv();
-const resend = new Resend(process.env.RESEND_API_KEY);
+configDotenv()
+const resend = new Resend(process.env.RESEND_API_KEY)
 
 export const sendPasswordResetEmail = async (email: string, token: string) => {
   return await resend.emails.send({
@@ -48,17 +48,16 @@ export const sendUserVerificationEmail = async (email: string, verificationCode:
     html: `
       <h3>Verify your email address</h3>
       <p>Please verify your email address by entering the following verification code: ${verificationCode}</p>
-      
+
     `,
   });
 }
 
 
 export const subscriptionExpireReminder = async (payload: any) => {
-  console.log('payload: ', payload);
   await resend.emails.send({
       from: process.env.COMPANY_RESEND_GMAIL_ACCOUNT as string,
-      to: "mansi@auspicioussoft.com",
+      to: payload.email,
       subject: "Subscription Expiry Reminder",
       text: `Hello ${payload.name },
 
@@ -78,8 +77,7 @@ ${process.env.COMPANY_NAME} Team`
 export const sendUserLoginCredentialsEmail = async (email: string, firstName: string,lastName:string, password: string, companyName: string) => {
   return await resend.emails.send({
     from: process.env.COMPANY_RESEND_GMAIL_ACCOUNT as string,
-    // to: email,
-    to: "mansi@auspicioussoft.com",
+    to: email,
     subject: "Your Login Credentials",
     html: `
       <h3>Your Login Credentials</h3>
@@ -95,3 +93,5 @@ export const sendUserLoginCredentialsEmail = async (email: string, firstName: st
     `,
   });
 }
+
+
