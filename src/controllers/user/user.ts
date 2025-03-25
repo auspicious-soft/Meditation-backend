@@ -3,7 +3,7 @@ import { httpStatusCode } from "../../lib/constant"
 import { errorParser } from "../../lib/errors/error-response-handler"
 import { clientSignupSchema, passswordResetSchema } from "../../validation/client-user"
 import { formatZodErrors } from "../../validation/format-zod-errors"
-import { loginService, signupService, forgotPasswordService, newPassswordAfterOTPVerifiedService, passwordResetService, getDashboardStatsService, getUserInfoService, getUserInfoByEmailService, editUserInfoService, verifyOtpPasswordResetService, getAllUsersService, verifyEmailService, createUserService, getUserForCompanyService, getAllUserForCompanyService, deactivateUserService, deleteUserService } from "../../services/user/user"
+import { loginService, signupService, forgotPasswordService, newPassswordAfterOTPVerifiedService, passwordResetService, getUserInfoService, getUserInfoByEmailService, editUserInfoService, verifyOtpPasswordResetService, getAllUsersService, verifyEmailService, createUserService, getUserForCompanyService, getAllUserForCompanyService, deactivateUserService, deleteUserService, getDashboardStatsService, getHomePageService, resendOtpService } from "../../services/user/user"
 import { z } from "zod"
 import mongoose from "mongoose"
 
@@ -30,7 +30,7 @@ export const verifyEmail = async(req:Request,res:Response)=>{
 
 export const login = async (req: Request, res: Response) => {
     try {
-        const response = await loginService(req.body, res)
+        const response = await loginService(req.body,req, res)
         return res.status(httpStatusCode.OK).json(response)
     }
     catch (error: any) {
@@ -180,5 +180,22 @@ export const deleteUser = async (req: Request, res: Response) => {
     }
 };
 
-
+export const getHomePage =async(req:Request, res:Response)=>{
+    try {
+        const response = await getHomePageService( req.params.id, res); 
+        return res.status(httpStatusCode.OK).json(response);
+    } catch (error: any) {
+        const { code, message } = errorParser(error);
+        return res.status(code || httpStatusCode.INTERNAL_SERVER_ERROR).json({ success: false, message: message || "An error occurred" });
+    }
+} 
+export const resendOtp =async(req:Request, res:Response)=>{
+    try {
+        const response = await resendOtpService( req.body.email, res); 
+        return res.status(httpStatusCode.OK).json(response);
+    } catch (error: any) {
+        const { code, message } = errorParser(error);
+        return res.status(code || httpStatusCode.INTERNAL_SERVER_ERROR).json({ success: false, message: message || "An error occurred" });
+    }
+} 
 

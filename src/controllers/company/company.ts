@@ -4,12 +4,14 @@ import {
   deleteCompanyService,
   getCompaniesService,
   getCompanyByIdService,
+  getCompanyDashboardService,
   updateCompanyService,
 } from "../../services/company/company-service";
 import { errorParser } from "../../lib/errors/error-response-handler";
 import { httpStatusCode } from "../../lib/constant";
 
 export const createCompany = async (req: Request, res: Response) => {
+  
   try {
     const response = await companyCreateService(req.body, req, res);
     return res.status(httpStatusCode.CREATED).json(response)
@@ -64,6 +66,18 @@ export const getCompanyById = async (req: Request, res: Response) => {
 export const deleteCompanyById = async (req: Request, res: Response) => {
   try {
     const response = await deleteCompanyService(req.params.id, res);
+    return res.status(response.statusCode).json(response);
+  } catch (error: any) {
+    const { code, message } = errorParser(error);
+    return res.status(code || httpStatusCode.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message: message || "An error occurred while deleting the company",
+    });
+  }
+}
+export const getCompanyDashboard = async (req: Request, res: Response) => {
+  try {
+    const response = await getCompanyDashboardService(req.params.id, res);
     return res.status(response.statusCode).json(response);
   } catch (error: any) {
     const { code, message } = errorParser(error);

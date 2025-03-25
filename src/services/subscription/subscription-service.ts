@@ -1,3 +1,4 @@
+import { Console } from "console";
 import { configDotenv } from "dotenv";
 import { Response } from "express";
 import mongoose from "mongoose";
@@ -6,11 +7,11 @@ import { httpStatusCode, planIdsMap } from "src/lib/constant";
 import { errorResponseHandler } from "src/lib/errors/error-response-handler";
 import { companyModels } from "src/models/company/company-schema";
 import { timestampToDateString } from "src/utils";
-import { subscriptionExpireReminder } from "src/utils/mails/mail";
+import { sendPromoCodeEmail, subscriptionExpireReminder } from "src/utils/mails/mail";
 import Stripe from "stripe";
 import { v4 as uuidv4 } from 'uuid';
 
-
+configDotenv();
 
 // Define TypeScript interfaces for better type safety
 interface PriceUpdateRequest {
@@ -465,6 +466,7 @@ export const createSubscriptionService = async (company: any, payload: any, res:
 
 export const afterSubscriptionCreatedService = async (payload: any, transaction: mongoose.mongo.ClientSession, res: Response<any, Record<string, any>>) => {
     const sig = payload.headers['stripe-signature'];
+	console.log('sig: ', sig);
     let checkSignature: Stripe.Event;
     try {
         checkSignature = stripe.webhooks.constructEvent(payload.rawBody, sig, process.env.STRIPE_WEBHOOK_SECRET as string);
@@ -546,6 +548,58 @@ export const afterSubscriptionCreatedService = async (payload: any, transaction:
 		            subscriptionStartDate: timestampToDateString(subscription.current_period_start),
                 }, { new: true })
         }
+        return {
+            success: true,
+            message: 'Subscription renewed successfully'
+        }
+
+    }
+    if (event.type === 'promotion_code.created') {
+		console.log('event.type: ', event.type);
+		
+        const couponDetails = event.data.object;
+		console.log('invoice: ', couponDetails);
+		const { code, coupon,customer,expires_at } = couponDetails
+		console.log('code, coupon,customer: ', code, coupon,customer);
+		const userDetails = await companyModels.findOne({ stripeCustomerId: customer })
+		if (!userDetails) return errorResponseHandler('User or customer ID not found', 404, res);
+		console.log('userDetails: ', userDetails);
+		if (userDetails) {
+			const expiryDate =expires_at !==null ?timestampToDateString(expires_at as number) : null;
+			console.log('coupon?.expires_at: ', coupon?.expires_at);
+			await sendPromoCodeEmail(userDetails.email, userDetails?.companyName, code, coupon.percent_off, expiryDate || undefined);
+		} else {
+			console.error("User details not found for the given customer.");
+		}
+		// await 
+		// console.log('invoice: ', invoice);
+        // const { customer: customerId, subscription: subscriptionId } = invoice
+
+        // const subscription = await stripe.subscriptions.retrieve(subscriptionId as string)
+        // const metadata = subscription.metadata
+        // if (!subscription) return errorResponseHandler('Subscription not found', 404, res)
+
+        // const customer = await stripe.customers.retrieve(customerId as string)
+        // if (!customer) return errorResponseHandler('Customer not found', 404, res)
+
+        // if (subscription.status === 'active') {
+        //     await companyModels.findOneAndUpdate({ stripeCustomerId: customerId },
+        //         {
+        //             subscriptionId: subscriptionId,
+		// 			subscriptionStatus: subscription.status,
+		// 			subscriptionExpiryDate: timestampToDateString(subscription.current_period_end),
+		// 			subscriptionStartDate: timestampToDateString(subscription.current_period_start),
+        //         }, { new: true })
+        // }
+        // else {
+        //     await companyModels.findOneAndUpdate({ stripeCustomerId: customerId },
+        //         {
+		// 			subscriptionId: null,
+		// 			subscriptionStatus: subscription.status,
+		// 			subscriptionExpiryDate: timestampToDateString(subscription.current_period_end),
+		//             subscriptionStartDate: timestampToDateString(subscription.current_period_start),
+        //         }, { new: true })
+        // }
         return {
             success: true,
             message: 'Subscription renewed successfully'

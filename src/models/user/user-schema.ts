@@ -66,9 +66,15 @@ const usersSchema = new mongoose.Schema(
       default: false,
     },
     isVerifiedByCompany:{
-      type:Boolean,
-      default:false
-    }
+      type:String,
+      enum:["pending","approved","rejected"],
+      default:"pending"
+    },
+    isTermsAccepted: {
+      type: Boolean,
+      default: false,
+    },
+   
   },
   { timestamps: true }
 );
