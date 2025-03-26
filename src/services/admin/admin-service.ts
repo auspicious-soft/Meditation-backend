@@ -149,7 +149,6 @@ export const newPassswordAfterOTPVerifiedService = async (
   return {
     success: true,
     message: "Password updated successfully",
-    data: response,
   };
 };
 
