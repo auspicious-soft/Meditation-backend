@@ -25,7 +25,6 @@ export const getPasswordResetTokenByToken = async (token: string) => {
   try {
     const passwordResetToken = await passwordResetTokenModel.findOne({ 
       token:token,
-      isUsed: false
     });
     return passwordResetToken;
   } catch {
