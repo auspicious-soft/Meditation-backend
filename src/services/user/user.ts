@@ -116,7 +116,6 @@ export const signupService = async (payload: any,req:Request, res: Response) => 
 	// if (isMobileApp) {
 		token = jwt.sign({ id: userData._id, role: userData.role }, process.env.JWT_SECRET_PHONE as string);
 	// }
-	console.log('token: ', token);
 	return {
 		success: true,
 		message: "Request sent successfully",
@@ -127,18 +126,21 @@ export const signupService = async (payload: any,req:Request, res: Response) => 
 };
 
 export const verifyEmailService = async (req: any, res: Response) => {
-	const { token } = req.body;
-	console.log("token:", token);
-	const tokenData = await getPasswordResetTokenByToken(token);
+	const { otp } = req.body;
+	console.log("token:", otp);
+	const tokenData = await getPasswordResetTokenByToken(otp);
 	console.log("tokenData:", tokenData);
 	if (!tokenData) return errorResponseHandler("Invalid Otp", httpStatusCode.FORBIDDEN, res);
 	const getUser = await usersModel.findOne({ email: tokenData.email });
-	if (!getUser) return errorResponseHandler("User not found with this signup first.", httpStatusCode.NOT_FOUND, res);
+	if (!getUser) return errorResponseHandler("User not found.", httpStatusCode.NOT_FOUND, res);
 	const user = await usersModel.findByIdAndUpdate(getUser._id, { emailVerified: true }, { new: true });
 	if (!user) return errorResponseHandler("User not found", httpStatusCode.NOT_FOUND, res);
 	await sendUserSignupEmail(user.email, user.firstName, user.lastName);
 	await passwordResetTokenModel.findByIdAndDelete(tokenData._id);
-	return { success: true, message: "Email verified successfully" };
+	const userData = user.toObject() as any;
+	delete userData.password;
+	const token = jwt.sign({ id: userData._id, role: userData.role }, process.env.JWT_SECRET_PHONE as string);	
+	return { success: true, message: "Email verified successfully", data: token};
 };
 
 // export const loginService = async (payload: any, res: Response) => {
