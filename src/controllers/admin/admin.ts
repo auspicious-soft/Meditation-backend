@@ -30,6 +30,7 @@ export const login = async (req: Request, res: Response) => {
 };
 
 export const forgotPassword = async (req: Request, res: Response) => {
+  
   try {
     const response = await forgotPasswordService(req.body, res);
     return res.status(httpStatusCode.OK).json(response);
