@@ -25,7 +25,7 @@ export const getAllCollections = async (req: Request, res: Response) =>{
 
 export const getCollectionById = async (req: Request, res: Response) =>{
   try {
-     const response: any = await getCollectionByIdService(req, res)
+     const response: any = await getCollectionByIdService(req?.params?.id, res)
             return res.status(httpStatusCode.CREATED).json(response)
   } catch (error) {
       const { code, message } = errorParser(error)

@@ -9,7 +9,7 @@ import mongoose from "mongoose"
 
 export const signup = async (req: Request, res: Response) => {
     try {
-        const response: any = await signupService(req.body, res)
+        const response: any = await signupService(req.body,req, res)
         return res.status(httpStatusCode.CREATED).json(response)
     }
     catch (error: any) {

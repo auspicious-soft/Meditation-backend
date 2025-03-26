@@ -114,9 +114,7 @@ export const getAllCollectionsService = async (req: Request, res: Response) => {
 
 };
 
-export const getCollectionByIdService = async (req: Request, res: Response) => {
-
-    const { id } = req.params;
+export const getCollectionByIdService = async (id: any, res: Response) => {
     
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return errorResponseHandler(
@@ -175,8 +173,6 @@ export const getCollectionWithAudioService = async (req: Request, res: Response)
     const audioFiles = await AudioModel.find({
       collectionType: id,
     })
-      .populate("levels")
-      .populate("bestFor")
       .sort({ createdAt: -1 });
     
     // Create response object with collection and its audio files

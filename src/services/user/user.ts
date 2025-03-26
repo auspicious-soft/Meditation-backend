@@ -63,7 +63,8 @@ const schemas = [usersModel, companyModels, adminModel];
 //     }
 // }
 
-export const signupService = async (payload: any, res: Response) => {
+export const signupService = async (payload: any,req:Request, res: Response) => {
+	console.log('payload: ', payload);
 	const { email, lastName, firstName, password, dob, gender, companyName } = payload;
 
 	// Check if the company exists
@@ -110,12 +111,18 @@ export const signupService = async (payload: any, res: Response) => {
 	const result = await createJoinRequestService({ companyId: company[0]?._id, userId: newUser?._id });
 	const userData = newUser.toObject() as any;
 	delete userData.password;
+	const isMobileApp = req.headers["x-client-type"] === "mobile";
 
+	let token;
+	// if (isMobileApp) {
+		token = jwt.sign({ id: userData._id, role: userData.role }, process.env.MOBILE_JWT_SECRET as string);
+	// }
+	console.log('token: ', token);
 	return {
 		success: true,
 		message: "Request sent successfully",
 		data: {
-			user: userData,
+			user: {userData, token},
 		},
 	};
 };
