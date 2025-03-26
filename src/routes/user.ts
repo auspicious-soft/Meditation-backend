@@ -20,7 +20,7 @@ const router = Router();
 router.post("/signup", signup);
 router.post("/resend-otp", resendOtp);
 router.post("/login", login);
-router.patch("/verify-email", verifyEmail);
+router.patch("/email/verify", verifyEmail);
 router.get("/get-all-users", getAllUsers);
 router.get("/dashboard", checkAuth, getDashboardStats);
 router.post("/audio-history", UserAudioHistory);

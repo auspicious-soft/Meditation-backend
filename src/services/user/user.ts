@@ -129,7 +129,7 @@ export const verifyEmailService = async (req: any, res: Response) => {
 	const { otp } = req.body;
 	console.log("token:", otp);
 	const tokenData = await getPasswordResetTokenByToken(otp);
-	console.log("tokenData:", tokenData);
+	console.log('tokenData: ', tokenData);
 	if (!tokenData) return errorResponseHandler("Invalid Otp", httpStatusCode.FORBIDDEN, res);
 	const getUser = await usersModel.findOne({ email: tokenData.email });
 	if (!getUser) return errorResponseHandler("User not found.", httpStatusCode.NOT_FOUND, res);
