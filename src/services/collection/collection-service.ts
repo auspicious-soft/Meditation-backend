@@ -97,22 +97,42 @@ export const getAllCollectionsService = async (req: Request, res: Response) => {
     // Build filter based on query params
     // const filter: any = {};
     // if (bestFor) filter.bestFor = bestFor;
-    // if (isActive !== undefined) filter.isActive = isActive === 'true';
-    
-    const collections = await collectionModel
-      .find()
-      .populate("levels")
-      .populate("bestFor")
-      .sort({ createdAt: -1 });
-    
-    return {
-      success: true,
-      message: "Collections fetched successfully",
-      count: collections.length,
-      data: collections
-    };
+    // if (isActive !== undefined) filter.isActive = isActive === 'true';   
+    const { page = "1", limit = "10" } = req.query;
 
-};
+  // Convert page and limit to numbers and ensure they are positive
+  const pageNumber = Math.max(1, parseInt(page as string, 10));
+  const limitNumber = Math.max(1, parseInt(limit as string, 10));
+  const skip = (pageNumber - 1) * limitNumber;
+  const totalCollections = await collectionModel.countDocuments();
+
+  // Fetch paginated collections
+  const collections = await collectionModel
+    .find()
+    .populate("levels")
+    .populate("bestFor")
+    .sort({ createdAt: -1 }) // Sort by createdAt descending
+    .skip(skip) // Skip documents for pagination
+    .limit(limitNumber); // Limit the number of documents returned
+
+  // Calculate total pages
+  const totalPages = Math.ceil(totalCollections / limitNumber);
+
+  return {
+    success: true,
+    message: "Collections fetched successfully",
+    data: {
+      collections,
+      pagination: {
+        total: totalCollections,
+        page: pageNumber,
+        limit: limitNumber,
+        totalPages,
+        hasNextPage: pageNumber < totalPages,
+        hasPrevPage: pageNumber > 1,
+      }
+
+}}}
 
 export const getCollectionByIdService = async (id: any, res: Response) => {
     
