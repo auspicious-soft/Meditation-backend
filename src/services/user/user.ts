@@ -131,7 +131,7 @@ export const verifyEmailService = async (req: any, res: Response) => {
 	console.log("token:", token);
 	const tokenData = await getPasswordResetTokenByToken(token);
 	console.log("tokenData:", tokenData);
-	if (!tokenData) return errorResponseHandler("Invalid token", httpStatusCode.FORBIDDEN, res);
+	if (!tokenData) return errorResponseHandler("Invalid Otp", httpStatusCode.FORBIDDEN, res);
 	const getUser = await usersModel.findOne({ email: tokenData.email });
 	if (!getUser) return errorResponseHandler("User not found with this signup first.", httpStatusCode.NOT_FOUND, res);
 	const user = await usersModel.findByIdAndUpdate(getUser._id, { emailVerified: true }, { new: true });
