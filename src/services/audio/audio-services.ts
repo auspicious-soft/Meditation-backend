@@ -1,8 +1,12 @@
 import { Request, Response } from "express";
+import mongoose from "mongoose";
 import { httpStatusCode } from "src/lib/constant";
 import { errorResponseHandler } from "src/lib/errors/error-response-handler";
 import { AudioModel } from "src/models/audio/audio-schema";
+import { bestForModel } from "src/models/bestfor/bestfor-schema";
 import { collectionModel } from "src/models/collection/collection-schema";
+import { levelModel } from "src/models/level/level-schema";
+import { queryBuilder } from "src/utils";
 
 const capitalizeFirstLetter = (string: string) => {
   if (!string) return string;
@@ -147,4 +151,148 @@ export const deleteAudioService = async (req: Request, res: Response) => {
       message: "Audio deleted successfully",
       data:null
     };
+};
+export const getfilterOptionsService = async (req: Request, res: Response) => {
+      const bestForList = await bestForModel.find();
+    const levels = await levelModel.find();
+
+   
+    return {
+      success: true,
+      message: "filters fetched successfully",
+      data:{bestForList,levels}
+    };
+};
+
+
+export const searchAudiosService = async (payload: any, res: Response) => {
+    const { songName, levels, bestFor } = payload;
+
+    let query: any = {};
+    
+    if (songName) {
+        if (typeof songName !== 'string') {
+            return {
+                success: false,
+                message: 'songName must be a string'
+            };
+        }
+        query.songName = { $regex: songName, $options: 'i' }; // Case-insensitive search
+    }
+    
+    // Build collection-related filters
+    const collectionMatch: any = {};
+    
+    // Add levels filter if provided (by name)
+    if (levels) {
+        collectionMatch['levels.name'] = { 
+            $in: Array.isArray(levels) ? levels : [levels] 
+        };
+    }
+    
+    // Add bestFor filter if provided (by name)
+    if (bestFor) {
+        collectionMatch['bestFor.name'] = bestFor;
+    }
+    
+        // If we have collection filters, use aggregation
+        if (Object.keys(collectionMatch).length > 0) {
+            const audios = await AudioModel.aggregate([
+                // Match audio documents first
+                { $match: query },
+                
+                // Lookup to join with collections
+                {
+                    $lookup: {
+                        from: 'collections', // Must match your collection name in MongoDB
+                        localField: 'collectionType',
+                        foreignField: '_id',
+                        as: 'collectionData'
+                    }
+                },
+                
+                // Unwind the collectionData array
+                { $unwind: '$collectionData' },
+                
+                // Lookup for levels
+                {
+                    $lookup: {
+                        from: 'levels', // Assuming 'levels' is your levels collection name
+                        localField: 'collectionData.levels',
+                        foreignField: '_id',
+                        as: 'collectionData.levelsData'
+                    }
+                },
+                
+                // Lookup for bestFor
+                {
+                    $lookup: {
+                        from: 'bestfors', // Assuming 'bestfors' is your bestFor collection name
+                        localField: 'collectionData.bestFor',
+                        foreignField: '_id',
+                        as: 'collectionData.bestForData'
+                    }
+                },
+                
+                // Match against collection filters using the populated data
+                { 
+                    $match: {
+                        $and: [
+                            ...(levels ? [{
+                                'collectionData.levelsData.name': { 
+                                    $in: Array.isArray(levels) ? levels : [levels] 
+                                }
+                            }] : []),
+                            ...(bestFor ? [{
+                                'collectionData.bestForData.name': bestFor
+                            }] : [])
+                        ]
+                    }
+                },
+                
+                // Project to shape the output
+                {
+                    $project: {
+                        songName: 1,
+                        audioUrl: 1,
+                        imageUrl: 1,
+                        description: 1,
+                        duration: 1,
+                        isActive: 1,
+                        collectionType: {
+                            $mergeObjects: [
+                                '$collectionData',
+                                {
+                                    levels: '$collectionData.levelsData',
+                                    bestFor: { $arrayElemAt: ['$collectionData.bestForData', 0] }
+                                }
+                            ]
+                        }
+                    }
+                }
+            ]);
+            
+            return {
+                success: true,
+                message: "Audios fetched successfully with filters",
+                data: audios
+            };
+        } else {
+            // If no collection filters, use simple find with populate
+            const audios = await AudioModel.find(query)
+                .populate({
+                    path: 'collectionType',
+                    populate: [
+                        { path: 'levels', model: 'levels' },
+                        { path: 'bestFor', model: 'BestFor' }
+                    ]
+                });
+                
+            return {
+                success: true,
+                message: "Audios fetched successfully with filters",
+                data: audios
+            };
+        }
+    
 };
