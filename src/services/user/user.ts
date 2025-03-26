@@ -115,7 +115,7 @@ export const signupService = async (payload: any,req:Request, res: Response) => 
 
 	let token;
 	// if (isMobileApp) {
-		token = jwt.sign({ id: userData._id, role: userData.role }, process.env.MOBILE_JWT_SECRET as string);
+		token = jwt.sign({ id: userData._id, role: userData.role }, process.env.JWT_SECRET_PHONE as string);
 	// }
 	console.log('token: ', token);
 	return {
@@ -188,7 +188,7 @@ export const loginService = async (payload: any, req: any, res: Response) => {
 
 	let token;
 	if (isMobileApp) {
-		token = jwt.sign({ id: user._id, role: user.role }, process.env.MOBILE_JWT_SECRET as string);
+		token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET_PHONE as string);
 	}
 
 	return {
