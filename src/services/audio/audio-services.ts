@@ -22,7 +22,7 @@ export const uploadAudioService = async(req : Request, res : Response)=>{
     // Validate required fields
     if (!songName || !collectionType || !audioUrl || !imageUrl || !duration) {
       return errorResponseHandler(
-        "songName, collection type, audio URL,duration and image URL are required",
+        "All Fields are required to upload audio",
         httpStatusCode.BAD_REQUEST,
         res
       );
