@@ -7,7 +7,7 @@ import { verifyOtpPasswordReset } from "src/controllers/user/user";
 import { checkAuth } from "src/middleware/check-auth";
 import { createCollection, deleteCollection } from "src/controllers/collection/collection-controller";
 import { deleteAudio, uploadAudio } from "src/controllers/audio/audio-controller";
-import { createCompany, getAllCompanies } from "src/controllers/company/company";
+import { createCompany, deleteCompanyById, getAllCompanies } from "src/controllers/company/company";
 import { createBestFor, deleteBestFor } from "src/controllers/bestfor/bestfor-controller";
 import { createLevel, deleteLevel } from "src/controllers/level/level-controller";
 import { getAllCoupons, getAllSubscriptionsHandler, getPrices, getSubscriptionByIdHandler, subscriptionExpireInAWeek, subscriptionExpireRemainder, updatePrices } from "src/controllers/subscription/subscription-controller";
@@ -21,6 +21,7 @@ router.post("/create-company", createCompany);
 router.post("/create-bestfor",createBestFor)
 router.post("/create-level", createLevel);
 router.delete("/delete-collection/:id",deleteCollection)
+router.delete("/delete-company/:id", deleteCompanyById);
 router.delete("/delete-user/:id", deleteAUser);
 router.delete("/delete-audio/:id", deleteAudio);
 router.delete("/delete-bestfor/:id",deleteBestFor);
