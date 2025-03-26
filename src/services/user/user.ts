@@ -111,7 +111,6 @@ export const signupService = async (payload: any,req:Request, res: Response) => 
 	const result = await createJoinRequestService({ companyId: company[0]?._id, userId: newUser?._id });
 	const userData = newUser.toObject() as any;
 	delete userData.password;
-	const isMobileApp = req.headers["x-client-type"] === "mobile";
 
 	let token;
 	// if (isMobileApp) {
@@ -122,7 +121,7 @@ export const signupService = async (payload: any,req:Request, res: Response) => 
 		success: true,
 		message: "Request sent successfully",
 		data: {
-			user: {userData, token},
+			 userData, token
 		},
 	};
 };
