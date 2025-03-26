@@ -75,14 +75,40 @@ export const uploadAudioService = async(req : Request, res : Response)=>{
 };
 
 export const getAllAudiosService = async (req: Request, res: Response) => {
+// Extract pagination parameters from query
+const { page = "1", limit = "10" } = req.query;
 
-    const audios = await AudioModel.find().populate("collectionType");
-    return {
-      success: true,
-      message: "Audios fetched successfully",
-      data: audios,
-    };
+// Convert page and limit to numbers and ensure they are positive
+const pageNumber = Math.max(1, parseInt(page as string, 10));
+const limitNumber = Math.max(1, parseInt(limit as string, 10));
+const skip = (pageNumber - 1) * limitNumber;
+const totalAudios = await AudioModel.countDocuments();
 
+// Fetch paginated audios
+const audios = await AudioModel.find()
+  .populate("collectionType")
+  .sort({ createdAt: -1 }) // Optional: Sort by createdAt descending
+  .skip(skip) // Skip documents for pagination
+  .limit(limitNumber); // Limit the number of documents returned
+
+// Calculate total pages
+const totalPages = Math.ceil(totalAudios / limitNumber);
+
+return {
+  success: true,
+  message: "Audios fetched successfully",
+  data: {
+    audios,
+    pagination: {
+      total: totalAudios,
+      page: pageNumber,
+      limit: limitNumber,
+      totalPages,
+      hasNextPage: pageNumber < totalPages,
+      hasPrevPage: pageNumber > 1,
+    },
+  },
+}
 };
 
 export const getAudioByIdService = async (req: Request, res: Response) => {
