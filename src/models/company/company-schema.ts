@@ -8,6 +8,18 @@ const CompanySchema = new Schema(
       // required: true,
       unique: true,
     },
+    firstName: {
+      type: String,
+    },
+    lastName: {
+      type: String,
+    },
+    dob: {
+      type: Date,
+    },
+    gender:{
+      type: String,
+    },
     stripeCustomerId: {
       type: String,
       default: null,

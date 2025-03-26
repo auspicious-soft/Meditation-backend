@@ -186,10 +186,11 @@ export const getCompaniesService = async (payload: any) => {
 };
 
 export const updateCompanyService = async (payload: any, req: any, res: Response) => {
-  const { companyName, email, password } = payload;
+  const { companyName, email,firstName,lastName,gender,dob } = payload;
+  const {id} = req.params
 
   if (
-    [companyName, email, password].some(
+    [companyName, email,firstName,lastName,gender,dob].some(
       (field) => !field || field.trim() === ""
     )
   ) {
@@ -200,7 +201,7 @@ export const updateCompanyService = async (payload: any, req: any, res: Response
     );
   }
 
-  const existingCompany = await companyModels.findOne({ email });
+  const existingCompany = await companyModels.findById(id);
   // Check if the email exists
   if (!existingCompany) {
     return errorResponseHandler(
@@ -211,15 +212,17 @@ export const updateCompanyService = async (payload: any, req: any, res: Response
   }
 
   // Hash the password
-  const hashedPassword = await bcrypt.hash(password, 10);
 
   // Update the company
-  const updatedCompany = await companyModels.findOneAndUpdate(
-    { email },
+  const updatedCompany = await companyModels.findByIdAndUpdate(
+    existingCompany._id,
     {
       companyName,
       email: email.toLowerCase().trim(),
-      password: hashedPassword,
+      firstName,
+      lastName,
+      gender,
+      dob,
     },
     { new: true }
   );

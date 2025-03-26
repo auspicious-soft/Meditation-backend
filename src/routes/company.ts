@@ -13,7 +13,7 @@ router.get("/dashboard/:id", getCompanyDashboard);
 
 
 router.get("/get-company-by-id/:id", getCompanyById);
-router.put("/update-company", updateCompany);
+router.put("/update-company/:id", updateCompany);
 router.delete("/delete-company/:id", deleteCompanyById);
 
 router.post("/create-subscription/:id", createSubscription);
