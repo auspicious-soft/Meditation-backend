@@ -60,7 +60,7 @@ export const updateJoinRequestService = async (id: string, payload: any, res: Re
 			updatedJoinRequest = await joinRequestsModel.findByIdAndUpdate(id, { status: "Rejected" }, { new: true });
 			await usersModel.findByIdAndUpdate(id, { isVerifiedByCompany: "rejected" }, { new: true });
 		} else if (payload.status === "approve") {
-			updatedJoinRequest = await joinRequestsModel.findByIdAndUpdate(id, { status: "Accepted" }, { new: true });
+			updatedJoinRequest = await joinRequestsModel.findByIdAndUpdate(id, { status: "Approved" }, { new: true });
 			await usersModel.findByIdAndUpdate(id, { isVerifiedByCompany: "approved" }, { new: true });
 			const EmailVerificationToken = await generatePasswordResetToken(userData.email);
 			if (EmailVerificationToken) {
