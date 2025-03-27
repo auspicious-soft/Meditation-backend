@@ -31,7 +31,8 @@ export const loginService = async (payload: any, req: any, res: Response) => {
   if (!user) {
     return errorResponseHandler("User not found", httpStatusCode.NOT_FOUND, res);
   }
-  if(!user.emailVerified){
+  if(user.role !== "admin") {
+  if( !user.emailVerified){
     return errorResponseHandler("Please verify email to login", httpStatusCode.FORBIDDEN, res);
   }
   if (user.isBlocked) {
@@ -40,7 +41,7 @@ export const loginService = async (payload: any, req: any, res: Response) => {
 
   if (!user.isAccountActive) {
     return errorResponseHandler("User account is not activated", httpStatusCode.FORBIDDEN, res);
-  }
+  }}
 
   const isPasswordValid = await bcrypt.compare(password, user.password);
   if (!isPasswordValid) {
