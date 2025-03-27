@@ -50,7 +50,7 @@ export const getAllJoinRequestsService = async (id: string, res: Response) => {
 };
 
 export const updateJoinRequestService = async (id: string, payload: any, res: Response) => {
-	try {
+	
 		const joinRequest = await joinRequestsModel.find({ userId: id });
 		const userData = await usersModel.findById(id);
 		if (!joinRequest) return errorResponseHandler("Join request not found", httpStatusCode.NOT_FOUND, res);
@@ -69,11 +69,8 @@ export const updateJoinRequestService = async (id: string, payload: any, res: Re
 				return errorResponseHandler("Failed to send email verification", httpStatusCode.INTERNAL_SERVER_ERROR, res);
 			}
 		}
-		return res.status(httpStatusCode.OK).json({ success: true, data: updatedJoinRequest });
-	} catch (error) {
-		console.error("Error in updateJoinRequest:", error);
-		return errorResponseHandler("Failed to update join request", httpStatusCode.INTERNAL_SERVER_ERROR, res);
-	}
+		return { success: true, data: updatedJoinRequest };
+	
 };
 
 export const deleteJoinRequestService = async (id: string, res: Response) => {
