@@ -45,7 +45,7 @@ export const loginService = async (payload: any, req: any, res: Response) => {
 
   const isPasswordValid = await bcrypt.compare(password, user.password);
   if (!isPasswordValid) {
-    return errorResponseHandler("Invalid password", httpStatusCode.UNAUTHORIZED, res);
+    return errorResponseHandler("Invalid email or password", httpStatusCode.UNAUTHORIZED, res);
   }
 
   const userObject = user.toObject();
