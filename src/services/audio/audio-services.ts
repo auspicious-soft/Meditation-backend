@@ -17,10 +17,10 @@ const capitalizeFirstLetter = (string: string) => {
 };
 
 export const uploadAudioService = async(req : Request, res : Response)=>{
-  const { songName, collectionType, audioUrl, imageUrl, duration,description} = req.body;
+  const { songName, collectionType, audioUrl, imageUrl, duration, description, levels, bestFor } = req.body;
     
     // Validate required fields
-    if (!songName || !collectionType || !audioUrl || !imageUrl || !duration) {
+    if (!songName || !collectionType || !audioUrl || !imageUrl || !duration || !description || !levels || !bestFor) {
       return errorResponseHandler(
         "All Fields are required to upload audio",
         httpStatusCode.BAD_REQUEST,
@@ -58,6 +58,8 @@ export const uploadAudioService = async(req : Request, res : Response)=>{
       imageUrl,
       duration: duration || 0,
       description,
+      levels,
+      bestFor
     });
     
     // Save to database
