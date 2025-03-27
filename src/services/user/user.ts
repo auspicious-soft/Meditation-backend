@@ -297,11 +297,11 @@ export const forgotPasswordService = async (payload: any, res: Response) => {
 
 export const verifyOtpPasswordResetService = async (token: string, res: Response) => {
 	const existingToken = await getPasswordResetTokenByToken(token);
-	if (!existingToken) return errorResponseHandler("Invalid token", httpStatusCode.BAD_REQUEST, res);
+	if (!existingToken) return errorResponseHandler("Invalid OTP", httpStatusCode.BAD_REQUEST, res);
 
 	const hasExpired = new Date(existingToken.expires) < new Date();
 	if (hasExpired) return errorResponseHandler("OTP expired", httpStatusCode.BAD_REQUEST, res);
-	return { success: true, message: "Token verified successfully" };
+	return { success: true, message: "OTP verified successfully" };
 };
 
 export const newPassswordAfterOTPVerifiedService = async (payload: { password: string; otp: string }, res: Response) => {

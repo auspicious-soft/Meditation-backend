@@ -15,6 +15,7 @@ import { errorParser } from "../../lib/errors/error-response-handler";
 import { httpStatusCode } from "../../lib/constant";
 import { z } from "zod";
 import mongoose from "mongoose";
+import { verifyOtpPasswordResetService } from "src/services/user/user";
 
 //Auth Controllers
 export const login = async (req: Request, res: Response) => {
@@ -41,7 +42,16 @@ export const forgotPassword = async (req: Request, res: Response) => {
       .json({ success: false, message: message || "An error occurred" });
   }
 };
-
+export const verifyOtpPasswordReset = async (req: Request, res: Response) => {
+  const { otp } = req.body;
+  try {
+    const response = await verifyOtpPasswordResetService(otp, res);
+    return res.status(httpStatusCode.OK).json(response);
+  } catch (error: any) {
+    const { code, message } = errorParser(error);
+    return res.status(code || httpStatusCode.INTERNAL_SERVER_ERROR).json({ success: false, message: message || "An error occurred" });
+  }
+};
 export const newPassswordAfterOTPVerified = async (
   req: Request,
   res: Response
