@@ -7,7 +7,7 @@ import connectDB from "./configF/db";
 import { admin, user,company, level, bestfor, collection, audio } from "./routes";
 import { checkValidAdminRole } from "./utils";
 import bodyParser from "body-parser";
-import { login, newPassswordAfterOTPVerified } from "./controllers/admin/admin";
+import { login, newPassswordAfterOTPVerified, verifyOtpPasswordReset } from "./controllers/admin/admin";
 import { forgotPassword } from "./controllers/admin/admin";
 import { afterSubscriptionCreated } from "./controllers/subscription/subscription-controller";
 
@@ -58,6 +58,7 @@ app.use('/api/level', level);
 app.use('/api/bestfor', bestfor);
 app.use("/api/audio", audio);
 app.post("/api/forgot-password", forgotPassword);
+app.post("/api/verify-otp", verifyOtpPasswordReset)
 app.patch("/api/otp-new-password-verification", newPassswordAfterOTPVerified);
 app.post('/api/company/webhook', express.raw({ type: 'application/json' }), afterSubscriptionCreated)
 app.get('/api/company/webhook', (req, res) => {
