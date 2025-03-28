@@ -56,7 +56,7 @@ export const updateCollection = async (req: Request, res: Response) =>{
 export const deleteCollection = async (req: Request, res: Response) =>{
   try {
      const response: any = await deleteCollectionService(req, res)
-            return res.status(httpStatusCode.CREATED).json(response)
+            return res.status(httpStatusCode.OK).json(response)
   } catch (error) {
       const { code, message } = errorParser(error)
           return res.status(code || httpStatusCode.INTERNAL_SERVER_ERROR).json({ success: false, message: message || "An error occurred" })
