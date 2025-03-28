@@ -30,13 +30,13 @@ export const sendCompanyCreationEmail = async (email: string, companyName: strin
   });
 };
 
-export const sendUserSignupEmail = async (email: string, firstName: string,lastName:string) => {
+export const sendUserSignupEmail = async (email: string, firstName: string) => {
   return await resend.emails.send({
     from: process.env.COMPANY_RESEND_GMAIL_ACCOUNT as string,
     to: email,
     subject: "Welcome to our platform",
     html: `
-      <h3>Welcome to our platform, ${firstName} ${lastName}!</h3>
+      <h3>Welcome to our platform, ${firstName} !</h3>
       <p>Your account has been created successfully.Thank you for choosing us.</p>
       
     `,

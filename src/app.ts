@@ -10,6 +10,7 @@ import bodyParser from "body-parser";
 import { login, newPassswordAfterOTPVerified, verifyOtpPasswordReset } from "./controllers/admin/admin";
 import { forgotPassword } from "./controllers/admin/admin";
 import { afterSubscriptionCreated } from "./controllers/subscription/subscription-controller";
+import { companySignup, verifyCompanyEmail } from "./controllers/company/company";
 
 
 
@@ -53,6 +54,8 @@ app.use("/api/admin", checkValidAdminRole, admin);
 app.use("/api/user", user);
 app.use("/api/company",company)
 app.post("/api/login", login);
+app.post("/api/company/signup", companySignup);
+app.post("/api/company/verify-email", verifyCompanyEmail);
 app.use("/api/collection", collection);
 app.use('/api/level', level);
 app.use('/api/bestfor', bestfor);

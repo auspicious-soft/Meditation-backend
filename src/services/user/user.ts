@@ -12,7 +12,7 @@ import { companyModels } from "src/models/company/company-schema";
 import { queryBuilder } from "src/utils";
 import { passwordResetTokenModel } from "src/models/password-token-schema";
 import { createJoinRequestService } from "../join-requests/join-requests-service";
-import { joinRequestsModel } from "src/models/join-requests/join-requests-schema";
+import { joinRequestsModel } from "src/models/user-join-requests/user-join-requests-schema";
 import { collectionModel } from "src/models/collection/collection-schema";
 import { userAudioHistoryModel } from "src/models/useraudiohistory/user-audio-history";
 import { bestForModel } from "src/models/bestfor/bestfor-schema";
@@ -135,13 +135,56 @@ export const verifyEmailService = async (req: any, res: Response) => {
 	if (!getUser) return errorResponseHandler("User not found.", httpStatusCode.NOT_FOUND, res);
 	const user = await usersModel.findByIdAndUpdate(getUser._id, { emailVerified: true }, { new: true });
 	if (!user) return errorResponseHandler("User not found", httpStatusCode.NOT_FOUND, res);
-	await sendUserSignupEmail(user.email, user.firstName, user.lastName);
+	await sendUserSignupEmail(user.email, user.firstName+" "+ user.lastName);
 	await passwordResetTokenModel.findByIdAndDelete(tokenData._id);
 	const userData = user.toObject() as any;
 	delete userData.password;
 	const token = jwt.sign({ id: userData._id, role: userData.role }, process.env.JWT_SECRET_PHONE as string);	
 	return { success: true, message: "Email verified successfully", data: token};
 };
+
+// export const verifyEmailService = async (req: any, res: Response) => {
+//     const { otp, type } = req.body; // Add a `type` field to determine the model (e.g., "user" or "company")
+// 	let role = req.headers["role"]; // Extract role from headers
+//     console.log("token:", otp, "role:", role);
+
+//     if (!role) {
+//         role = "user"; // Default to "user" if role is not provided
+//     }
+
+//     const tokenData = await getPasswordResetTokenByToken(otp);
+//     console.log('tokenData: ', tokenData);
+//     if (!tokenData) return errorResponseHandler("Invalid Otp", httpStatusCode.FORBIDDEN, res);
+
+//     // Determine the model based on the `type` field
+// 	const model = role === "company" ? companyModels : usersModel;
+
+// 	const entity = await (model as any).findOne({ email: tokenData.email });
+//     if (!entity) return errorResponseHandler(`${type === "company" ? "Company" : "User"} not found.`, httpStatusCode.NOT_FOUND, res);
+
+// 	const updatedEntity = await (model as any).findByIdAndUpdate(entity._id, { emailVerified: true }, { new: true });
+//     if (!updatedEntity) return errorResponseHandler(`${type === "company" ? "Company" : "User"} not found`, httpStatusCode.NOT_FOUND, res);
+
+//     if (type === "user") {
+//         await sendUserSignupEmail(updatedEntity.email, updatedEntity.firstName, updatedEntity.lastName);
+//     }
+
+//     await passwordResetTokenModel.findByIdAndDelete(tokenData._id);
+
+//     const entityData = updatedEntity.toObject() as any;
+//     delete entityData.password;
+
+//     const token = jwt.sign(
+//         { id: entityData._id, role: entityData.role },
+//         process.env.JWT_SECRET_PHONE as string
+//     );
+
+//     return {
+//         success: true,
+//         message: `${type === "company" ? "Company" : "Email"} verified successfully`,
+//         data: token,
+//     };
+// };
 
 // export const loginService = async (payload: any, res: Response) => {
 //     const { email, phoneNumber, password } = payload
