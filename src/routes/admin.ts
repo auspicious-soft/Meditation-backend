@@ -12,6 +12,7 @@ import { createBestFor, deleteBestFor } from "src/controllers/bestfor/bestfor-co
 import { createLevel, deleteLevel } from "src/controllers/level/level-controller";
 import { getAllCoupons, getAllSubscriptionsHandler, getPrices, getSubscriptionByIdHandler, subscriptionExpireInAWeek, subscriptionExpireRemainder, updatePrices } from "src/controllers/subscription/subscription-controller";
 import { sendNotificationToUser, sendNotificationToUsers } from "src/controllers/notifications/notifications-controller";
+import { createCompanyJoinRequest, deleteCompanyJoinRequest, getAllCompanyJoinRequests, getCompanyJoinRequestById, updateCompanyJoinRequest } from "src/controllers/company-join-requests/company-join-requests-controller";
 
 const router = Router();
 
@@ -46,5 +47,12 @@ router.get('/subscriptions-expire-in-a-week', subscriptionExpireInAWeek);
 //notifications route
 router.post("/send-notification", sendNotificationToUsers)
 router.post("/send-notification-to-specific-users", sendNotificationToUser)
+
+//company-join-request routes
+router.post("/company-join-requests", createCompanyJoinRequest);
+router.get("/company-join-requests/:id", getCompanyJoinRequestById);
+router.get("/company-join-requests", getAllCompanyJoinRequests);
+router.put("/company-join-requests/:id", updateCompanyJoinRequest);
+router.delete("/company-join-requests/:id", deleteCompanyJoinRequest);
 
 export { router }

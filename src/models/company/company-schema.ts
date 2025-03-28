@@ -77,8 +77,13 @@ const CompanySchema = new Schema(
     },
     emailVerified:{
       type: Boolean,
-      default: true,
-    }
+      default: false,
+    },
+    isVerifiedByAdmin:{
+      type:String,
+      enum:["pending","approved","rejected"],
+      default:"pending"
+    },
   },
   { timestamps: true }
 );

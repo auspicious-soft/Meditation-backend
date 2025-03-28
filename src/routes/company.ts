@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { createCompany, deleteCompanyById, getCompanyById, getCompanyDashboard, updateCompany } from "src/controllers/company/company";
-import { createJoinRequest, deleteJoinRequest, getAllJoinRequests, getJoinRequestById, updateJoinRequest } from "src/controllers/join-requests/join-requests-controller";
+import { createJoinRequest, deleteJoinRequest, getAllJoinRequests, getJoinRequestById, updateJoinRequest } from "src/controllers/user-join-requests/user-join-requests-controller";
 import { getAllNotificationsOfUser, markAllNotificationsAsRead, markSingleNotificationAsRead } from "src/controllers/notifications/notifications-controller";
 import { cancelSubscription, createSubscription } from "src/controllers/subscription/subscription-controller";
 import { createUser, deactivateUser, deleteUser, editUserInfo, getAllUserForCompany, getUserInfo } from "src/controllers/user/user";

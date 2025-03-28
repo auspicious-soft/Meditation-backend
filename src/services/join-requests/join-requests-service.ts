@@ -2,7 +2,7 @@ import { Response } from "express";
 import { httpStatusCode } from "src/lib/constant";
 import { errorResponseHandler } from "src/lib/errors/error-response-handler";
 import { Request } from "express";
-import { joinRequestsModel } from "src/models/join-requests/join-requests-schema";
+import { joinRequestsModel } from "src/models/user-join-requests/user-join-requests-schema";
 import { usersModel } from "src/models/user/user-schema";
 import { generatePasswordResetToken } from "src/utils/mails/token";
 import { sendUserVerificationEmail } from "src/utils/mails/mail";
@@ -39,7 +39,7 @@ export const getJoinRequestByIdService = async (id: string, res: Response) => {
 };
 export const getAllJoinRequestsService = async (id: string, res: Response) => {
 	try {
-		const joinRequest = await joinRequestsModel.find({ companyId: id });
+		const joinRequest = await joinRequestsModel.find();
 		if (!joinRequest) return errorResponseHandler("Join request not found", httpStatusCode.NOT_FOUND, res);
 
 		return res.status(httpStatusCode.OK).json({ success: true, data: joinRequest });

@@ -2,7 +2,7 @@ import bcrypt from "bcryptjs";
 import e, { Response } from "express";
 import { errorResponseHandler } from "../../lib/errors/error-response-handler";
 import { httpStatusCode } from "../../lib/constant";
-import { sendCompanyCreationEmail } from "src/utils/mails/mail";
+import { sendCompanyCreationEmail, sendUserSignupEmail } from "src/utils/mails/mail";
 import { companyModels } from "src/models/company/company-schema";
 import { customAlphabet } from "nanoid";
 import { queryBuilder } from "src/utils";
@@ -10,74 +10,78 @@ import { adminModel } from "src/models/admin/admin-schema";
 import { usersModel } from "src/models/user/user-schema";
 import stripe from "src/configF/stripe";
 import Stripe from "stripe";
+import { createJoinRequestService } from "../join-requests/join-requests-service";
+import { joinRequestsModel } from "src/models/user-join-requests/user-join-requests-schema";
+import { companyJoinRequestsModel } from "src/models/company-join-requests/company-join-requests-schema";
+import { createCompanyJoinRequestService } from "../company-join-requests/company-join-requests-service";
+import { getPasswordResetTokenByToken } from "src/utils/mails/token";
+import { passwordResetTokenModel } from "src/models/password-token-schema";
 
 const schemas = [adminModel, usersModel, companyModels]; // Add all schemas to the array
 
-// export const companyCreateService = async (
-//   payload: any,
-//   req: any,
-//   res: Response
-// ) => {
-//   const { companyName, email, password } = payload;
 
-//   if (
-//     [companyName, email, password].some(
-//       (field) => !field || field.trim() === ""
-//     )
-//   ) {
-//     return errorResponseHandler(
-//       "All fields are required to create a company",
-//       httpStatusCode.BAD_REQUEST,
-//       res
-//     );
-//   }
+export const companySignupService = async (payload: any,req:any, res: Response) => {
+  const { email, password,  companyName } = payload;
 
-//   let existingUser = null;
-//   for (const schema of schemas) {
-//     existingUser = await (schema as any).findOne({ email });
-//     if (existingUser) break;
-//   }
+ 
+  let existingUser = null;
+  for (const schema of schemas) {
+    existingUser = await (schema as any).findOne({ email });
+    if (existingUser) break;
+  }
+  const joinRequest = await companyJoinRequestsModel.find({ companyId: existingUser?._id });
+  if (existingUser && existingUser.role !== "company") {
+    return errorResponseHandler("User email already exists", httpStatusCode.CONFLICT, res);
+  }
+  if (existingUser && existingUser.role == "company" && existingUser.emailVerified === true) {
+    return errorResponseHandler("Email already exist, try Login", httpStatusCode.CONFLICT, res);
+  }
+  if (existingUser && existingUser.role == "company" && existingUser.emailVerified === false && joinRequest) {
+    const result = await createCompanyJoinRequestService({ companyId: existingUser._id });
+    return { success: true, message: "Request sent successfully" };
+  }
 
-//   if (existingUser) {
-//     return errorResponseHandler("email already exists", httpStatusCode.CONFLICT, res);
-//   }
+  // Hash the password
+  const hashedPassword = await bcrypt.hash(password, 10);
+  const identifier = customAlphabet("0123456789", 5);
 
-//   // Check if the company name already exists
-//   const existingCompanyName = await companyModels.findOne({ companyName });
-//   if (existingCompanyName) {
-//     return errorResponseHandler(
-//       "Company name already exists",
-//       httpStatusCode.CONFLICT,
-//       res
-//     );
-//   }
-//   // Hash the password
-//   const hashedPassword = await bcrypt.hash(password, 10);
-//   const identifier = customAlphabet("0123456789", 5);
-//   // Create a new company
-//   const newCompany = new companyModels({
-//     companyName,
-//     identifier: identifier(),
-//     email: email.toLowerCase().trim(),
-//     password: hashedPassword,
-//   });
+  // Create a new user
+  const newUser = new companyModels({
+    identifier: identifier(),
+    email,
+    password: hashedPassword,
+    companyName,
+  });
 
-//   // Save the company to the database
-//   await newCompany.save();
+  await newUser.save();
+  await createCompanyJoinRequestService({  companyId: newUser?._id });
+  const userData = newUser.toObject() as any;
+  delete userData.password;
 
-//   // Send email to the company
-//   await sendCompanyCreationEmail(email, companyName);
 
-//   const companyData = newCompany.toObject() as any;
-//   delete companyData.password;
+  return {
+    success: true,
+    message: "Request sent successfully",
+    data: {
+       userData
+    },
+  };
+};
 
-//   return {
-//     success: true,
-//     message: "Company created successfully",
-//     data: companyData,
-//   };
-// };
-
+export const verifyCompanyEmailService = async (req: any, res: Response) => {
+  const { otp } = req.body;
+  const tokenData = await getPasswordResetTokenByToken(otp);
+  if (!tokenData) return errorResponseHandler("Invalid Otp", httpStatusCode.FORBIDDEN, res);
+  const getCompany = await companyModels.findOne({ email: tokenData.email });
+  if (!getCompany) return errorResponseHandler("Company not found.", httpStatusCode.NOT_FOUND, res);
+  const company = await companyModels.findByIdAndUpdate(getCompany._id, { emailVerified: true }, { new: true });
+  if (!company) return errorResponseHandler("Company not found", httpStatusCode.NOT_FOUND, res);
+  await sendUserSignupEmail(company.email, company.companyName);
+  await passwordResetTokenModel.findByIdAndDelete(tokenData._id);
+  const companyData = company.toObject() as any;
+  delete companyData.password;
+  return { success: true, message: "Email verified successfully" };
+};
 export const companyCreateService = async (
   payload: any,
   req: any,
@@ -143,6 +147,7 @@ export const companyCreateService = async (
     identifier: identifier(),
     email: email.toLowerCase().trim(),
     password: hashedPassword,
+    emailVerified: true,
     stripeCustomerId: stripeCustomer.id, // Add Stripe customer ID to the company model
   });
 
