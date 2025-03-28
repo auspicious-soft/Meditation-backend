@@ -64,7 +64,7 @@ export const getfilterOptions= async (req: Request, res: Response) =>{
 }
 export const searchAudios = async (req: Request, res: Response) =>{
   try {
-     const response: any = await searchAudiosService(req.query, res)
+     const response: any = await searchAudiosService(req, res)
             return res.status(httpStatusCode.OK).json(response)
   } catch (error) {
       const { code, message } = errorParser(error)

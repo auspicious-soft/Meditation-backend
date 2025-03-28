@@ -9,13 +9,11 @@ import { queryBuilder } from "src/utils";
 import { adminModel } from "src/models/admin/admin-schema";
 import { usersModel } from "src/models/user/user-schema";
 import stripe from "src/configF/stripe";
-import Stripe from "stripe";
-import { createJoinRequestService } from "../join-requests/join-requests-service";
-import { joinRequestsModel } from "src/models/user-join-requests/user-join-requests-schema";
 import { companyJoinRequestsModel } from "src/models/company-join-requests/company-join-requests-schema";
 import { createCompanyJoinRequestService } from "../company-join-requests/company-join-requests-service";
 import { getPasswordResetTokenByToken } from "src/utils/mails/token";
 import { passwordResetTokenModel } from "src/models/password-token-schema";
+import Stripe from "stripe";
 
 const schemas = [adminModel, usersModel, companyModels]; // Add all schemas to the array
 

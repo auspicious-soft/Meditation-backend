@@ -93,23 +93,19 @@ export const createCollectionService = async (req: Request, res: Response) => {
 
 // Get all collections
 export const getAllCollectionsService = async (req: Request, res: Response) => {
+// Extract pagination parameters from query
+const { page = "1", limit = "10" } = req.query;
 
-    // const { bestFor, isActive } = req.query;
-    
-    // Build filter based on query params
-    // const filter: any = {};
-    // if (bestFor) filter.bestFor = bestFor;
-    // if (isActive !== undefined) filter.isActive = isActive === 'true';   
-    const { page = "1", limit = "10" } = req.query;
+// Convert page and limit to numbers and ensure they are positive
+const pageNumber = Math.max(1, parseInt(page as string, 10));
+const limitNumber = Math.max(1, parseInt(limit as string, 10));
+const skip = (pageNumber - 1) * limitNumber;
 
-  // Convert page and limit to numbers and ensure they are positive
-  const pageNumber = Math.max(1, parseInt(page as string, 10));
-  const limitNumber = Math.max(1, parseInt(limit as string, 10));
-  const skip = (pageNumber - 1) * limitNumber;
-  const totalCollections = await collectionModel.countDocuments();
+// Get total number of collections
+const totalCollections = await collectionModel.countDocuments();
 
-  // Fetch paginated collections
-  const collections = await collectionModel
+// Fetch paginated collections
+const collections = await collectionModel
     .find()
     .populate("levels")
     .populate("bestFor")
@@ -117,24 +113,85 @@ export const getAllCollectionsService = async (req: Request, res: Response) => {
     .skip(skip) // Skip documents for pagination
     .limit(limitNumber); // Limit the number of documents returned
 
-  // Calculate total pages
-  const totalPages = Math.ceil(totalCollections / limitNumber);
+// Add audio count for each collection
+const collectionsWithAudioCount = await Promise.all(
+    collections.map(async (collection) => {
+        const audioCount = await AudioModel.countDocuments({
+            collectionType: collection._id,
+            isActive: true
+        });
+        return {
+            ...collection.toObject(), // Convert Mongoose document to plain object
+            audioCount
+        };
+    })
+);
 
-  return {
+
+// Calculate total pages
+const totalPages = Math.ceil(totalCollections / limitNumber);
+
+// Return response
+return {
     success: true,
     message: "Collections fetched successfully",
     data: {
-      collections,
-      pagination: {
-        total: totalCollections,
-        page: pageNumber,
-        limit: limitNumber,
-        totalPages,
-        hasNextPage: pageNumber < totalPages,
-        hasPrevPage: pageNumber > 1,
-      }
+        collections: collectionsWithAudioCount,
+        pagination: {
+            total: totalCollections,
+            page: pageNumber,
+            limit: limitNumber,
+            totalPages,
+            hasNextPage: pageNumber < totalPages,
+            hasPrevPage: pageNumber > 1,
+        }
+    }
+};
+}
 
-}}}
+// export const getAllCollectionsService = async (req: Request, res: Response) => {
+
+//     // const { bestFor, isActive } = req.query;
+    
+//     // Build filter based on query params
+//     // const filter: any = {};
+//     // if (bestFor) filter.bestFor = bestFor;
+//     // if (isActive !== undefined) filter.isActive = isActive === 'true';   
+//     const { page = "1", limit = "10" } = req.query;
+
+//   // Convert page and limit to numbers and ensure they are positive
+//   const pageNumber = Math.max(1, parseInt(page as string, 10));
+//   const limitNumber = Math.max(1, parseInt(limit as string, 10));
+//   const skip = (pageNumber - 1) * limitNumber;
+//   const totalCollections = await collectionModel.countDocuments();
+
+//   // Fetch paginated collections
+//   const collections = await collectionModel
+//     .find()
+//     .populate("levels")
+//     .populate("bestFor")
+//     .sort({ createdAt: -1 }) // Sort by createdAt descending
+//     .skip(skip) // Skip documents for pagination
+//     .limit(limitNumber); // Limit the number of documents returned
+
+//   // Calculate total pages
+//   const totalPages = Math.ceil(totalCollections / limitNumber);
+
+//   return {
+//     success: true,
+//     message: "Collections fetched successfully",
+//     data: {
+//       collections,
+//       pagination: {
+//         total: totalCollections,
+//         page: pageNumber,
+//         limit: limitNumber,
+//         totalPages,
+//         hasNextPage: pageNumber < totalPages,
+//         hasPrevPage: pageNumber > 1,
+//       }
+
+// }}}
 
 export const getCollectionByIdService = async (id: any, res: Response) => {
     
@@ -409,3 +466,74 @@ export const getFilteredCollectionsService = async (req: Request, res: Response)
     data: collections,
   };
 };
+
+export const searchCollectionsService = async (req: any, res: Response) => {
+
+  // Extract query parameters
+  const { name, levels, bestFor } = req.query;
+
+  // Initialize query with base filter for active collections
+  let query: any = { isActive: true };
+
+  // Handle songName parameter
+  if (name) {
+      query.name = { $regex: name, $options: 'i' };
+  }
+
+  // Handle levels parameter
+  if (levels) {
+      const levelNames = levels.split(',').map((name: string) => name.trim());
+      const levelDocs = await levelModel.find({ 
+          name: { $in: levelNames }, 
+          isActive: true 
+      });
+      const levelIds = levelDocs.map(doc => doc._id);
+      if (levelIds.length > 0) {
+          query.levels = { $in: levelIds };
+      } else {
+          query._id = null; // No matching levels, return no results
+      }
+  }
+
+  // Handle bestFor parameter (supports multiple values)
+  if (bestFor) {
+      const bestForNames = bestFor.split(',').map((name: string) => name.trim());
+      const bestForDocs = await bestForModel.find({ 
+          name: { $in: bestForNames }, 
+          isActive: true 
+      });
+      const bestForIds = bestForDocs.map(doc => doc._id);
+      if (bestForIds.length > 0) {
+          query.bestFor = { $in: bestForIds };
+      } else {
+          query._id = null; // No matching bestFor, return no results
+      }
+  }
+
+  // Execute query and populate referenced fields
+  const collections = await collectionModel.find(query)
+      .populate('levels')
+      .populate('bestFor');
+
+  // Add audio count for each collection
+  const collectionsWithAudioCount = await Promise.all(
+      collections.map(async (collection) => {
+          const audioCount = await AudioModel.countDocuments({
+              collectionType: collection._id,
+              isActive: true
+          });
+          return {
+              ...collection.toObject(), // Convert Mongoose document to plain object
+              audioCount
+          };
+      })
+  );
+
+  // Return the results
+  return{
+    success: true,
+    message: "Collections fetched successfully",
+    data: collectionsWithAudioCount
+  };
+
+}

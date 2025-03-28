@@ -14,6 +14,7 @@ import { checkAuth } from "src/middleware/check-auth";
 import { UserAudioHistory } from "src/controllers/useraudiohistory/useraudiohistory-controller";
 import { getAudioById, getfilterOptions, searchAudios } from "src/controllers/audio/audio-controller";
 import { getAllCollections, getCollectionById, getCollectionWithAudio } from "src/controllers/collection/collection-controller";
+import { searchCollections } from "src/controllers/company/company";
 
 const router = Router();
 
@@ -36,6 +37,10 @@ router.get("/audio/filters", getfilterOptions);
 //Collection routes
 router.get("/discover/collections", getAllCollections);
 router.get("/collections/:id/audios", getCollectionWithAudio);
+router.get("/search/collections", searchCollections);
+
+//User-details routes
+router.put("/user-details", getCollectionById);
 
 //Audio routes
 router.get("/audio/:id", getAudioById);
