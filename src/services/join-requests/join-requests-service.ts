@@ -57,10 +57,11 @@ export const updateJoinRequestService = async (id: string, payload: any, res: Re
 		if (!userData) return errorResponseHandler("User data not found", httpStatusCode.NOT_FOUND, res);
 		let updatedJoinRequest;
 		if (payload.status === "deny") {
-			updatedJoinRequest = await joinRequestsModel.findByIdAndUpdate(id, { status: "Rejected" }, { new: true });
+			updatedJoinRequest = await joinRequestsModel.findOneAndUpdate({ userId: id }, { status: "Rejected" }, { new: true });
 			await usersModel.findByIdAndUpdate(id, { isVerifiedByCompany: "rejected" }, { new: true });
 		} else if (payload.status === "approve") {
-			updatedJoinRequest = await joinRequestsModel.findByIdAndUpdate(id, { status: "Approved" }, { new: true });
+			updatedJoinRequest = await joinRequestsModel.findOneAndUpdate({ userId: id }, { status: "Approved" }, { new: true });
+			console.log('updatedJoinRequest: ', updatedJoinRequest);
 			await usersModel.findByIdAndUpdate(id, { isVerifiedByCompany: "approved" }, { new: true });
 			const EmailVerificationToken = await generatePasswordResetToken(userData.email);
 			if (EmailVerificationToken) {
