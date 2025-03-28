@@ -3,9 +3,12 @@ import { httpStatusCode } from "src/lib/constant";
 import { errorResponseHandler } from "src/lib/errors/error-response-handler";
 import { levelModel } from "src/models/level/level-schema";
 
-const capitalizeFirstLetter = (string: string): string => {
+const capitalizeFirstLetter = (string: string) => {
   if (!string) return string;
-  return string.charAt(0).toUpperCase() + string.slice(1);
+  return string
+    .split(" ")
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
 };
 
 export const createLevelService = async (req: Request, res: Response) => {

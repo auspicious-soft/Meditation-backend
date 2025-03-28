@@ -4,9 +4,12 @@ import { errorResponseHandler } from "src/lib/errors/error-response-handler";
 import { bestForModel } from "src/models/bestfor/bestfor-schema";
 
 
-const capitalizeFirstLetter = (string: string): string => {
+const capitalizeFirstLetter = (string: string) => {
   if (!string) return string;
-  return string.charAt(0).toUpperCase() + string.slice(1);
+  return string
+    .split(" ")
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
 };
 
 export const createBestForService = async(req: Request,res: Response)=>{
