@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import mongoose from "mongoose";
+import mongoose, { isValidObjectId } from "mongoose";
 import { httpStatusCode } from "src/lib/constant";
 import { errorResponseHandler } from "src/lib/errors/error-response-handler";
 import { AudioModel } from "src/models/audio/audio-schema";
@@ -130,45 +130,89 @@ export const getAudioByIdService = async (req: Request, res: Response) => {
 };
 
 export const updateAudioService = async (req: Request, res: Response) => {
+  // Extract id from params and all relevant fields from body
+  const { id } = req.params;
+  const { songName, collectionType, audioUrl, imageUrl, duration, levels, bestFor } = req.body;
 
-    const { id } = req.params;
-    const { songName, collectionType, audioUrl, imageUrl, duration } = req.body;
-
-    // Validate duration format (HH:mm:ss)
-    if (duration) {
-      const durationRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]$/;
-      if (!durationRegex.test(duration)) {
-        return errorResponseHandler(
-          "Invalid duration format. Expected format is HH:mm:ss",
-          httpStatusCode.BAD_REQUEST,
-          res
-        );
-      }
+  // Validate duration format (HH:mm:ss)
+  if (duration) {
+    const durationRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]$/;
+    if (!durationRegex.test(duration)) {
+      return errorResponseHandler(
+        "Invalid duration format. Expected format is HH:mm:ss",
+        httpStatusCode.BAD_REQUEST,
+        res
+      );
     }
+  }
 
-    const updatedAudio = await AudioModel.findByIdAndUpdate(
-      id,
-      {
-        songName: songName ? capitalizeFirstLetter(songName) : undefined,
-        collectionType,
-        audioUrl,
-        imageUrl,
-        duration,
-      },
-      { new: true }
-    ).populate("collectionType")
+  // Validate levels (array of valid ObjectIds)
+  if (levels) {
+    if (!Array.isArray(levels) || levels.length === 0) {
+      return errorResponseHandler(
+        "Levels must be a non-empty array of ObjectIds",
+        httpStatusCode.BAD_REQUEST,
+        res
+      );
+    }
+    const invalidLevels = levels.filter((level) => !isValidObjectId(level));
+    if (invalidLevels.length > 0) {
+      return errorResponseHandler(
+        `Invalid ObjectId(s) in levels: ${invalidLevels.join(", ")}`,
+        httpStatusCode.BAD_REQUEST,
+        res
+      );
+    }
+  }
+
+  // Validate bestFor (array of valid ObjectIds)
+  if (bestFor) {
+    if (!Array.isArray(bestFor) || bestFor.length === 0) {
+      return errorResponseHandler(
+        "BestFor must be a non-empty array of ObjectIds",
+        httpStatusCode.BAD_REQUEST,
+        res
+      );
+    }
+    const invalidBestFor = bestFor.filter((bf) => !isValidObjectId(bf));
+    if (invalidBestFor.length > 0) {
+      return errorResponseHandler(
+        `Invalid ObjectId(s) in bestFor: ${invalidBestFor.join(", ")}`,
+        httpStatusCode.BAD_REQUEST,
+        res
+      );
+    }
+  }
+
+  // Update the audio document with all fields
+  const updatedAudio = await AudioModel.findByIdAndUpdate(
+    id,
+    {
+      songName: songName ? capitalizeFirstLetter(songName) : undefined,
+      collectionType,
+      audioUrl,
+      imageUrl,
+      duration,
+      levels,    // Array of ObjectId strings
+      bestFor,   // Array of ObjectId strings
+    },
+    { new: true } // Return the updated document
+  )
+    .populate("collectionType")
     .populate("levels")
     .populate("bestFor");
 
-    if (!updatedAudio) {
-      return errorResponseHandler("Audio not found", httpStatusCode.NOT_FOUND, res);
-    }
+  // Check if the audio was found and updated
+  if (!updatedAudio) {
+    return errorResponseHandler("Audio not found", httpStatusCode.NOT_FOUND, res);
+  }
 
-    return {
-      success: true,
-      message: "Audio updated successfully",
-      data: updatedAudio,
-    };
+  // Return the success response with the updated audio data
+  return {
+    success: true,
+    message: "Audio updated successfully",
+    data: updatedAudio,
+  };
 };
 
 export const deleteAudioService = async (req: Request, res: Response) => {
