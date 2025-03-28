@@ -213,7 +213,18 @@ export const getCollectionWithAudioService = async (req: Request, res: Response)
 
 export const updateCollectionService = async (req: Request, res: Response) => {
   const { id } = req.params;
+  console.log("id:", id);
   const { name, imageUrl, levels, bestFor, description } = req.body;
+  console.log("req.body:", req.body);
+
+  // Validate all fields are provided
+  if (!name || !imageUrl || !description || !levels || !bestFor) {
+    return errorResponseHandler(
+      "All fields (name, imageUrl, levels, bestFor, description) are required",
+      httpStatusCode.BAD_REQUEST, // Changed to BAD_REQUEST for missing fields
+      res
+    );
+  }
 
   // Validate collection ID
   if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -224,79 +235,91 @@ export const updateCollectionService = async (req: Request, res: Response) => {
     );
   }
 
-  // Find the collection to update
-  const collection = await collectionModel.findById(id);
-  if (!collection) {
+  // Validate levels
+  if (!Array.isArray(levels) || levels.length === 0) {
+    return errorResponseHandler(
+      "Levels must be a non-empty array",
+      httpStatusCode.BAD_REQUEST,
+      res
+    );
+  }
+
+  if (!levels.every((levelId: string) => mongoose.Types.ObjectId.isValid(levelId))) {
+    return errorResponseHandler(
+      "One or more provided level IDs are invalid",
+      httpStatusCode.BAD_REQUEST,
+      res
+    );
+  }
+
+  const existingLevels = await levelModel.find({
+    _id: { $in: levels },
+    isActive: true,
+  });
+
+  if (existingLevels.length !== levels.length) {
+    return errorResponseHandler(
+      "One or more selected levels do not exist or are inactive",
+      httpStatusCode.BAD_REQUEST,
+      res
+    );
+  }
+
+  // Validate bestFor
+  if (!Array.isArray(bestFor) || bestFor.length === 0) {
+    return errorResponseHandler(
+      "BestFor must be a non-empty array",
+      httpStatusCode.BAD_REQUEST,
+      res
+    );
+  }
+
+  if (!bestFor.every((bestForId: string) => mongoose.Types.ObjectId.isValid(bestForId))) {
+    return errorResponseHandler(
+      "One or more provided 'best for' IDs are invalid",
+      httpStatusCode.BAD_REQUEST,
+      res
+    );
+  }
+
+  const existingBestFor = await bestForModel.find({
+    _id: { $in: bestFor },
+    isActive: true,
+  });
+
+  if (existingBestFor.length !== bestFor.length) {
+    return errorResponseHandler(
+      "One or more selected 'best for' tags do not exist or are inactive",
+      httpStatusCode.BAD_REQUEST,
+      res
+    );
+  }
+
+  // Prepare update object
+  const updateData = {
+    name,
+    imageUrl,
+    levels,
+    bestFor,
+    description,
+  };
+
+  // Update the collection using findByIdAndUpdate
+  const updatedCollection = await collectionModel.findByIdAndUpdate(
+    id,
+    { $set: updateData },
+    { new: true, runValidators: true } // new: true returns the updated document, runValidators ensures schema validation
+  )
+    .populate("levels")
+    .populate("bestFor");
+
+  if (!updatedCollection) {
     return errorResponseHandler(
       "Collection not found",
       httpStatusCode.NOT_FOUND,
       res
     );
   }
-
-  // Validate levels if provided
-  if (levels && levels.length > 0) {
-    if (!levels.every((levelId: string) => mongoose.Types.ObjectId.isValid(levelId))) {
-      return errorResponseHandler(
-        "One or more provided level IDs are invalid",
-        httpStatusCode.BAD_REQUEST,
-        res
-      );
-    }
-
-    const existingLevels = await levelModel.find({
-      _id: { $in: levels },
-      isActive: true,
-    });
-
-    if (existingLevels.length !== levels.length) {
-      return errorResponseHandler(
-        "One or more selected levels do not exist or are inactive",
-        httpStatusCode.BAD_REQUEST,
-        res
-      );
-    }
-  }
-
-  // Validate bestFor if provided
-  if (bestFor && bestFor.length > 0) {
-    if (!bestFor.every((bestForId: string) => mongoose.Types.ObjectId.isValid(bestForId))) {
-      return errorResponseHandler(
-        "One or more provided 'best for' IDs are invalid",
-        httpStatusCode.BAD_REQUEST,
-        res
-      );
-    }
-
-    const existingBestFor = await bestForModel.find({
-      _id: { $in: bestFor },
-      isActive: true,
-    });
-
-    if (existingBestFor.length !== bestFor.length) {
-      return errorResponseHandler(
-        "One or more selected 'best for' tags do not exist or are inactive",
-        httpStatusCode.BAD_REQUEST,
-        res
-      );
-    }
-  }
-
-  // Update fields only if provided
-  if (name !== undefined) collection.name = name;
-  if (imageUrl !== undefined) collection.imageUrl = imageUrl;
-  if (levels !== undefined) collection.levels = levels;
-  if (bestFor !== undefined) collection.bestFor = bestFor;
-  if (description !== undefined) collection.description = description;
-
-  // Save updates
-  await collection.save();
-
-  // Populate references
-  const updatedCollection = await collectionModel
-    .findById(id)
-    .populate("levels")
-    .populate("bestFor");
 
   // Send response with status 200
   return{

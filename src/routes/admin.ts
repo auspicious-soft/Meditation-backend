@@ -28,7 +28,7 @@ router.delete("/delete-bestfor/:id",deleteBestFor);
 router.delete("/delete-level/:id",deleteLevel)
 router.get("/dashboard", getDashboardStats)
 router.get("/get-all-companies", getAllCompanies);
-router.put("/update/collection/:id",updateCollection)
+router.put("/update/:id/collection",updateCollection)
 
 //Analysis
 router.get("/analysis", getAnalytics)
