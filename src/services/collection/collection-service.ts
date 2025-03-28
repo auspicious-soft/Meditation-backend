@@ -10,9 +10,6 @@ import { AudioModel } from "src/models/audio/audio-schema";
 export const createCollectionService = async (req: Request, res: Response) => {
   const { name, imageUrl, levels, bestFor, description } = req.body;
 
-  console.log("Received levels:", levels);
-  console.log("Received bestFor:", bestFor);
-
   // Validate levels - Ensure all IDs are valid ObjectIds
   if (levels && levels.length > 0) {
     if (!levels.every((id: string) => mongoose.Types.ObjectId.isValid(id))) {

@@ -33,7 +33,6 @@ export const getPrices = async (req: Request, res: Response) => {
 export const getAllCoupons = async (req: Request, res: Response) => {
     try {
       const coupons = await getAllCouponsService();
-      console.log('coupons: ', coupons);
       res.status(200).json({
         success: true,
         data: coupons,
