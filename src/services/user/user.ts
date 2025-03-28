@@ -261,6 +261,19 @@ export const editUserInfoService = async (id: string, payload: any, res: Respons
 		data: updateduser,
 	};
 };
+export const updateUserDetailsService = async (user: any,payload: any, res: Response) => {
+	const id = user?.id ?? null;
+	if (!id) return errorResponseHandler("User not authenticated", httpStatusCode.UNAUTHORIZED, res);
+	const userDetails = await usersModel.findById(id);
+	if (!userDetails) return errorResponseHandler("User not found", httpStatusCode.NOT_FOUND, res);
+	const updateduser = await usersModel.findByIdAndUpdate(id, { ...payload }, { new: true });
+	if (!updateduser) return errorResponseHandler("User not found", httpStatusCode.NOT_FOUND, res);
+	return {
+		success: true,
+		message: "Details updated successfully",
+		data: updateduser,
+	};
+};
 export const resendOtpService = async (email: string, res: Response) => {
 	const userData = await usersModel.find({ email });
 	if (!userData) return errorResponseHandler("User not found", httpStatusCode.NOT_FOUND, res);

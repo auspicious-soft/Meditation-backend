@@ -341,7 +341,6 @@ interface CustomBalanceTransactionListParams extends Stripe.BalanceTransactionLi
 // };
 
 export const getSubscriptionsByCustomer = async (customerId: string) => {
-	console.log("customerId: ", customerId);
 	try {
 		// Define params for listing subscriptions
 		const subscriptionParams: Stripe.SubscriptionListParams = {

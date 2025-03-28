@@ -9,6 +9,7 @@ import {
   verifyEmail,
   getHomePage,
   resendOtp,
+  updateUserDetails,
 } from "../controllers/user/user";
 import { checkAuth } from "src/middleware/check-auth";
 import { UserAudioHistory } from "src/controllers/useraudiohistory/useraudiohistory-controller";
@@ -40,7 +41,7 @@ router.get("/collections/:id/audios", getCollectionWithAudio);
 router.get("/search/collections", searchCollections);
 
 //User-details routes
-router.put("/user-details", getCollectionById);
+router.put("/update/details",checkAuth, updateUserDetails);
 
 //Audio routes
 router.get("/audio/:id", getAudioById);

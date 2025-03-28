@@ -3,7 +3,7 @@ import { httpStatusCode } from "../../lib/constant"
 import { errorParser } from "../../lib/errors/error-response-handler"
 import { clientSignupSchema, passswordResetSchema } from "../../validation/client-user"
 import { formatZodErrors } from "../../validation/format-zod-errors"
-import { loginService, signupService, forgotPasswordService, newPassswordAfterOTPVerifiedService, passwordResetService, getUserInfoService, getUserInfoByEmailService, editUserInfoService, verifyOtpPasswordResetService, getAllUsersService, verifyEmailService, createUserService, getUserForCompanyService, getAllUserForCompanyService, deactivateUserService, deleteUserService, getDashboardStatsService, getHomePageService, resendOtpService } from "../../services/user/user"
+import { loginService, signupService, forgotPasswordService, newPassswordAfterOTPVerifiedService, passwordResetService, getUserInfoService, getUserInfoByEmailService, editUserInfoService, verifyOtpPasswordResetService, getAllUsersService, verifyEmailService, createUserService, getUserForCompanyService, getAllUserForCompanyService, deactivateUserService, deleteUserService, getDashboardStatsService, getHomePageService, resendOtpService, updateUserDetailsService } from "../../services/user/user"
 import { z } from "zod"
 import mongoose from "mongoose"
 
@@ -113,6 +113,16 @@ export const getUserInfoByEmail = async (req: Request, res: Response) => {
 export const editUserInfo = async (req: Request, res: Response) => {
     try {
         const response = await editUserInfoService(req.params.id, req.body, res);
+        return res.status(httpStatusCode.OK).json(response)
+    } catch (error: any) {
+        const { code, message } = errorParser(error)
+        return res.status(code || httpStatusCode.INTERNAL_SERVER_ERROR).json({ success: false, message: message || "An error occurred" });
+    }
+}
+export const updateUserDetails = async (req: Request, res: Response) => {
+    try {
+        console.log('req.user: ', req.user);
+        const response = await updateUserDetailsService(req.user, req.body, res);
         return res.status(httpStatusCode.OK).json(response)
     } catch (error: any) {
         const { code, message } = errorParser(error)
