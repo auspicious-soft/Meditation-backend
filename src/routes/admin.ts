@@ -20,16 +20,15 @@ router.post("/upload-collection",createCollection)
 router.post("/create-company", createCompany);
 router.post("/create-bestfor",createBestFor)
 router.post("/create-level", createLevel);
+router.get("/dashboard", getDashboardStats)
+router.get("/get-all-companies", getAllCompanies);
+router.put("/update/collection/:id", updateCollection);
 router.delete("/delete-collection/:id",deleteCollection)
 router.delete("/delete-company/:id", deleteCompanyById);
 router.delete("/delete-user/:id", deleteAUser);
 router.delete("/delete-audio/:id", deleteAudio);
 router.delete("/delete-bestfor/:id",deleteBestFor);
 router.delete("/delete-level/:id",deleteLevel)
-router.get("/dashboard", getDashboardStats)
-router.get("/get-all-companies", getAllCompanies);
-router.put("/update/:id/collection",updateCollection)
-
 //Analysis
 router.get("/analysis", getAnalytics)
 
