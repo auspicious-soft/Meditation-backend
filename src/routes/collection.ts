@@ -5,7 +5,7 @@ const router = Router()
 
 
 router.get("/", getAllCollections);
-router.route("/:id").get(getCollectionById).put(updateCollection);
+router.route("/:id").get(getCollectionById);
 router.get("/:id/audio", getCollectionWithAudio);
 router.get("/filter",getFilteredCollections)
 

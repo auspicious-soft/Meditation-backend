@@ -5,7 +5,7 @@ import { upload } from "../configF/multer";
 import { checkMulter } from "../lib/errors/error-response-handler"
 import { verifyOtpPasswordReset } from "src/controllers/user/user";
 import { checkAuth } from "src/middleware/check-auth";
-import { createCollection, deleteCollection } from "src/controllers/collection/collection-controller";
+import { createCollection, deleteCollection, updateCollection } from "src/controllers/collection/collection-controller";
 import { deleteAudio, uploadAudio } from "src/controllers/audio/audio-controller";
 import { createCompany, deleteCompanyById, getAllCompanies } from "src/controllers/company/company";
 import { createBestFor, deleteBestFor } from "src/controllers/bestfor/bestfor-controller";
@@ -28,6 +28,7 @@ router.delete("/delete-bestfor/:id",deleteBestFor);
 router.delete("/delete-level/:id",deleteLevel)
 router.get("/dashboard", getDashboardStats)
 router.get("/get-all-companies", getAllCompanies);
+router.put("/update/collection/:id",updateCollection)
 
 //Analysis
 router.get("/analysis", getAnalytics)
