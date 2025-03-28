@@ -116,7 +116,9 @@ return {
 export const getAudioByIdService = async (req: Request, res: Response) => {
  
     const { id } = req.params;
-    const audio = await AudioModel.findById(id).populate("collectionType");
+    const audio = await AudioModel.findById(id).populate("collectionType")
+    .populate("levels")
+    .populate("bestFor");
     if (!audio) {
       return errorResponseHandler("Audio not found", httpStatusCode.NOT_FOUND, res);
     }
@@ -154,7 +156,9 @@ export const updateAudioService = async (req: Request, res: Response) => {
         duration,
       },
       { new: true }
-    ).populate("collectionType");
+    ).populate("collectionType")
+    .populate("levels")
+    .populate("bestFor");
 
     if (!updatedAudio) {
       return errorResponseHandler("Audio not found", httpStatusCode.NOT_FOUND, res);
