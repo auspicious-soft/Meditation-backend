@@ -8,7 +8,7 @@ import mongoose from "mongoose";
 import { AudioModel } from "src/models/audio/audio-schema";
 
 export const createCollectionService = async (req: Request, res: Response) => {
-  const { name, imageUrl, levels, bestFor,description } = req.body;
+  const { name, imageUrl, levels, bestFor, description } = req.body;
 
   console.log("Received levels:", levels);
   console.log("Received bestFor:", bestFor);
@@ -29,7 +29,7 @@ export const createCollectionService = async (req: Request, res: Response) => {
       isActive: true,
     });
 
-    console.log("Existing levels in DB:", existingLevels.map(lvl => lvl._id));
+    console.log("Existing levels in DB:", existingLevels.map((lvl) => lvl._id));
 
     if (existingLevels.length !== levels.length) {
       return errorResponseHandler(
@@ -40,26 +40,28 @@ export const createCollectionService = async (req: Request, res: Response) => {
     }
   }
 
-  // Validate bestFor - Ensure it exists and is active
-  if (bestFor) {
-    if (!mongoose.Types.ObjectId.isValid(bestFor)) {
+  // Validate bestFor - Ensure all IDs are valid ObjectIds and exist
+  if (bestFor && bestFor.length > 0) {
+    // Check if all bestFor IDs are valid ObjectIds
+    if (!bestFor.every((id: string) => mongoose.Types.ObjectId.isValid(id))) {
       return errorResponseHandler(
-        "Invalid 'best for' ID",
+        "One or more provided 'best for' IDs are invalid",
         httpStatusCode.BAD_REQUEST,
         res
       );
     }
 
-    const bestForExists = await bestForModel.findOne({
-      _id: bestFor,
+    // Check if all bestFor entries exist and are active
+    const existingBestFor = await bestForModel.find({
+      _id: { $in: bestFor },
       isActive: true,
     });
 
-    console.log("BestFor Exists:", bestForExists);
+    console.log("Existing bestFor in DB:", existingBestFor.map((bf) => bf._id));
 
-    if (!bestForExists) {
+    if (existingBestFor.length !== bestFor.length) {
       return errorResponseHandler(
-        "Selected 'best for' tag does not exist or is inactive",
+        "One or more selected 'best for' tags do not exist or are inactive",
         httpStatusCode.BAD_REQUEST,
         res
       );
@@ -70,7 +72,7 @@ export const createCollectionService = async (req: Request, res: Response) => {
     name,
     imageUrl,
     levels: levels || [],
-    bestFor,
+    bestFor: bestFor || [], // Store as an array
     description,
   });
 
