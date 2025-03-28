@@ -258,7 +258,7 @@ export const updateCollectionService = async (req: Request, res: Response) => {
     }
   }
 
-  // Validate bestFor if provided (array of IDs)
+  // Validate bestFor if provided
   if (bestFor && bestFor.length > 0) {
     if (!bestFor.every((bestForId: string) => mongoose.Types.ObjectId.isValid(bestForId))) {
       return errorResponseHandler(
@@ -282,12 +282,12 @@ export const updateCollectionService = async (req: Request, res: Response) => {
     }
   }
 
-  // Update fields only if provided (matching frontend)
+  // Update fields only if provided
   if (name !== undefined) collection.name = name;
-  if (imageUrl !== undefined) collection.imageUrl = imageUrl; // Frontend sends "image"
-  if (levels !== undefined) collection.levels = levels; // Array of level IDs
-  if (bestFor !== undefined) collection.bestFor = bestFor; // Array of bestFor IDs
-  if (description !== undefined) collection.description = description; // Description field
+  if (imageUrl !== undefined) collection.imageUrl = imageUrl;
+  if (levels !== undefined) collection.levels = levels;
+  if (bestFor !== undefined) collection.bestFor = bestFor;
+  if (description !== undefined) collection.description = description;
 
   // Save updates
   await collection.save();
@@ -298,7 +298,8 @@ export const updateCollectionService = async (req: Request, res: Response) => {
     .populate("levels")
     .populate("bestFor");
 
-  return {
+  // Send response with status 200
+  return{
     success: true,
     message: "Collection updated successfully",
     data: updatedCollection,
