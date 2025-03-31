@@ -79,23 +79,32 @@ export const uploadAudioService = async(req : Request, res : Response)=>{
 
 export const getAllAudiosService = async (req: Request, res: Response) => {
 // Extract pagination parameters from query
-const { page = "1", limit = "10" } = req.query;
-
+// const { page = "1", limit = "10" } = req.query;
+console.log('req.query: ', req.query);
+ const page = parseInt(req.query.page as string) || 1;
+  const limit = parseInt(req.query.limit as string) || 0;
+  const offset = (page - 1) * limit;
+  const { query, sort } = queryBuilder(req.query, ["songName"]);
+  console.log('query: ', query);
+  const totalDataCount =
+    Object.keys(query).length < 1
+      ? await AudioModel.countDocuments()
+      : await AudioModel.countDocuments(query);
 // Convert page and limit to numbers and ensure they are positive
-const pageNumber = Math.max(1, parseInt(page as string, 10));
-const limitNumber = Math.max(1, parseInt(limit as string, 10));
-const skip = (pageNumber - 1) * limitNumber;
+// const pageNumber = Math.max(1, parseInt(page as string, 10));
+// const limitNumber = Math.max(1, parseInt(limit as string, 10));
+// const skip = (pageNumber - 1) * limitNumber;
 const totalAudios = await AudioModel.countDocuments();
 
 // Fetch paginated audios
-const audios = await AudioModel.find()
+const audios = await AudioModel.find(query)
   .populate("collectionType")
   .sort({ createdAt: -1 }) // Optional: Sort by createdAt descending
-  .skip(skip) // Skip documents for pagination
-  .limit(limitNumber); // Limit the number of documents returned
+  .skip(offset) // Skip documents for pagination
+  .limit(limit); // Limit the number of documents returned
 
 // Calculate total pages
-const totalPages = Math.ceil(totalAudios / limitNumber);
+const totalPages = Math.ceil(totalAudios / limit);
 
 return {
   success: true,
@@ -104,11 +113,12 @@ return {
     audios,
     pagination: {
       total: totalAudios,
-      page: pageNumber,
-      limit: limitNumber,
+      page ,
+      limit,
       totalPages,
-      hasNextPage: pageNumber < totalPages,
-      hasPrevPage: pageNumber > 1,
+      totalDataCount,
+      hasNextPage: page < totalPages,
+      hasPrevPage: page > 1,
     },
   },
 }
