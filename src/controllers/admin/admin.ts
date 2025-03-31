@@ -79,7 +79,7 @@ export const getAllUsers = async (req: Request, res: Response) => {
   }
 };
 
-export const getAUser = async (req: Request, res: Response) => {
+export const getAUserById = async (req: Request, res: Response) => {
   try {
     const response = await getAUserService(req.params.id, res);
     return res.status(httpStatusCode.OK).json(response);

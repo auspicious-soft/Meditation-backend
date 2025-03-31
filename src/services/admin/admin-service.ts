@@ -203,17 +203,14 @@ export const getAllUsersService = async (payload: any) => {
 };
 
 export const getAUserService = async (id: string, res: Response) => {
-  // const user = await usersModel.findById(id);
-  // if (!user) return errorResponseHandler("User not found", httpStatusCode.NOT_FOUND, res);
-  // const userProjects = await projectsModel.find({ userId: id }).select("-__v");
-  // return {
-  //     success: true,
-  //     message: "User retrieved successfully",
-  //     data: {
-  //         user,
-  //         projects: userProjects.length > 0 ? userProjects : [],
-  //     }
-  // };
+  const user = await usersModel.findById(id);
+  if (!user) return errorResponseHandler("User not found", httpStatusCode.NOT_FOUND, res);
+  return {
+      success: true,
+      message: "User retrieved successfully",
+      data:user
+    
+  };
 };
 
 export const updateAUserService = async (
