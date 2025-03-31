@@ -132,7 +132,7 @@ export const getAudioByIdService = async (req: Request, res: Response) => {
 export const updateAudioService = async (req: Request, res: Response) => {
   // Extract id from params and all relevant fields from body
   const { id } = req.params;
-  const { songName, collectionType, audioUrl, imageUrl, duration, levels, bestFor } = req.body;
+  const { songName, collectionType, audioUrl, imageUrl, duration, levels, bestFor,description } = req.body;
 
   // Validate duration format (HH:mm:ss)
   if (duration) {
@@ -194,7 +194,8 @@ export const updateAudioService = async (req: Request, res: Response) => {
       imageUrl,
       duration,
       levels,    // Array of ObjectId strings
-      bestFor,   // Array of ObjectId strings
+      bestFor,
+      description,   // Array of ObjectId strings
     },
     { new: true } // Return the updated document
   )
