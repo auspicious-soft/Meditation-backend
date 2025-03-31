@@ -16,7 +16,7 @@ import { createCompanyJoinRequest, deleteCompanyJoinRequest, getAllCompanyJoinRe
 import { createFAQ, deleteFAQ, getAllFAQ, getFAQById, updateFAQ } from "src/controllers/FAQs/FAQs-controller";
 
 const router = Router();
-
+ 
 router.post("/upload-audio",uploadAudio)
 router.post("/upload-collection",createCollection)
 router.post("/create-company", createCompany);
