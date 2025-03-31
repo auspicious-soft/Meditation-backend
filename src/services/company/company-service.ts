@@ -107,7 +107,7 @@ export const verifyCompanyEmailService = async (req: any, res: Response) => {
 
 	return {
 		success: true,
-		message: "Email verified and Stripe customer created successfully",
+		message: "Email verified created successfully",
 		data: companyData,
 	};
 };
