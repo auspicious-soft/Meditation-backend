@@ -7,6 +7,7 @@ import { httpStatusCode } from "../../lib/constant";
 import mongoose from "mongoose";
 import { AudioModel } from "src/models/audio/audio-schema";
 import { deleteFileFromS3 } from "src/configF/s3";
+import { queryBuilder } from "src/utils";
 
 export const createCollectionService = async (req: Request, res: Response) => {
   const { name, imageUrl, levels, bestFor, description } = req.body;
@@ -92,24 +93,31 @@ export const createCollectionService = async (req: Request, res: Response) => {
 // Get all collections
 export const getAllCollectionsService = async (req: Request, res: Response) => {
 // Extract pagination parameters from query
-const { page = "1", limit = "10" } = req.query;
+const page = parseInt(req.query.page as string) || 1;
+const limit = parseInt(req.query.limit as string) || 0;
+const offset = (page - 1) * limit;
+const { query, sort } = queryBuilder(req.query, ["fullName"]);
+const totalDataCount =
+  Object.keys(query).length < 1
+    ? await collectionModel.countDocuments()
+    : await collectionModel.countDocuments(query);
 
 // Convert page and limit to numbers and ensure they are positive
-const pageNumber = Math.max(1, parseInt(page as string, 10));
-const limitNumber = Math.max(1, parseInt(limit as string, 10));
-const skip = (pageNumber - 1) * limitNumber;
+// const pageNumber = Math.max(1, parseInt(page as string, 10));
+// const limitNumber = Math.max(1, parseInt(limit as string, 10));
+// const skip = (pageNumber - 1) * limitNumber;
 
 // Get total number of collections
-const totalCollections = await collectionModel.countDocuments();
+const totalCollections = await collectionModel.countDocuments(query);
 
 // Fetch paginated collections
 const collections = await collectionModel
-    .find()
+    .find(query)
     .populate("levels")
     .populate("bestFor")
     .sort({ createdAt: -1 }) // Sort by createdAt descending
-    .skip(skip) // Skip documents for pagination
-    .limit(limitNumber); // Limit the number of documents returned
+    .skip(offset) // Skip documents for pagination
+    .limit(limit); // Limit the number of documents returned
 
 // Add audio count for each collection
 const collectionsWithAudioCount = await Promise.all(
@@ -127,7 +135,7 @@ const collectionsWithAudioCount = await Promise.all(
 
 
 // Calculate total pages
-const totalPages = Math.ceil(totalCollections / limitNumber);
+const totalPages = Math.ceil(totalCollections / limit);
 
 // Return response
 return {
@@ -137,11 +145,11 @@ return {
         collections: collectionsWithAudioCount,
         pagination: {
             total: totalCollections,
-            page: pageNumber,
-            limit: limitNumber,
+            page,
+            limit,
             totalPages,
-            hasNextPage: pageNumber < totalPages,
-            hasPrevPage: pageNumber > 1,
+            hasNextPage: page < totalPages,
+            hasPrevPage: page > 1,
         }
     }
 };

@@ -6,7 +6,7 @@ import { checkMulter } from "../lib/errors/error-response-handler"
 import { verifyOtpPasswordReset } from "src/controllers/user/user";
 import { checkAuth } from "src/middleware/check-auth";
 import { createCollection, deleteCollection, updateCollection } from "src/controllers/collection/collection-controller";
-import { deleteAudio, updateAudio, uploadAudio } from "src/controllers/audio/audio-controller";
+import { deleteAudio, searchAudios, updateAudio, uploadAudio } from "src/controllers/audio/audio-controller";
 import { createCompany, deleteCompanyById, getAllCompanies } from "src/controllers/company/company";
 import { createBestFor, deleteBestFor } from "src/controllers/bestfor/bestfor-controller";
 import { createLevel, deleteLevel } from "src/controllers/level/level-controller";
@@ -58,6 +58,8 @@ router.get("/company-join-requests/:id", getCompanyJoinRequestById);
 router.get("/company-join-requests", getAllCompanyJoinRequests);
 router.put("/company-join-requests/:id", updateCompanyJoinRequest);
 router.delete("/company-join-requests/:id", deleteCompanyJoinRequest);
+router.get("/search/audio", searchAudios);
+
 
 //FAQs routes
 // Create a new FAQ

@@ -15,7 +15,6 @@ import { passwordResetTokenModel } from "src/models/password-token-schema";
 import { usersModel } from "src/models/user/user-schema";
 import { companyModels } from "../../models/company/company-schema"; 
 import jwt from "jsonwebtoken";
-import { getAllSubscriptionsHandler } from "src/controllers/subscription/subscription-controller";
 import { getAllSubscriptions } from "../subscription/subscription-service";
 
 const schemas = [adminModel, usersModel, companyModels];
@@ -48,17 +47,21 @@ export const loginService = async (payload: any, req: any, res: Response) => {
   if(!isMobileApp && user.role !== "admin" && user.isVerifiedByAdmin !== "approved" ){
     return errorResponseHandler("User is not verified by Admin", httpStatusCode.FORBIDDEN, res);
   }
+  if(isMobileApp && user.role ==="user"){
+    const company = await companyModels.find({companyName:user.companyName});                                                     
+    if(company[0].subscriptionStatus === "inactive"){
+      return errorResponseHandler("Company subscription is inactive", httpStatusCode.FORBIDDEN, res);
+    }
+    return errorResponseHandler("User is not verified by Admin", httpStatusCode.FORBIDDEN, res);
+  }
 
   const isPasswordValid = await bcrypt.compare(password, user.password);
   if (!isPasswordValid) {
     return errorResponseHandler("Invalid email or password", httpStatusCode.UNAUTHORIZED, res);
   }
   
-
   const userObject = user.toObject();
   delete userObject.password;
-
-
 
   let token;
   if (isMobileApp) {
