@@ -229,7 +229,7 @@ export const deleteAudioService = async (req: Request, res: Response) => {
     }
     if(audio.imageUrl){
       await deleteFileFromS3(audio.imageUrl)
-    }
+    } 
     const deletedAudio = await AudioModel.findByIdAndDelete(id);
     if (!deletedAudio) {
       return errorResponseHandler("Audio not found", httpStatusCode.NOT_FOUND, res);
