@@ -1,4 +1,3 @@
-import { Console } from "console";
 import { configDotenv } from "dotenv";
 import { Response } from "express";
 import mongoose from "mongoose";
@@ -42,7 +41,76 @@ const silverProductId = process.env.STRIPE_PRODUCT_SILVER_PLAN;
 const bronzeProductId = process.env.STRIPE_PRODUCT_BRONZE_PLAN;
 const goldProductId = process.env.STRIPE_PRODUCT_GOLD_PLAN;
 
+
+export const getAllProductsService = async (filter?: string) => {
+	console.log('filter: ', filter);
+    try {
+        const products: any[] = [];
+        
+        // Determine the active status based on the filter query
+        let activeFilter: boolean | undefined;
+        if (filter === "active") {
+            activeFilter = true;
+        } else if (filter === "archived") {
+            activeFilter = false;
+        } else if (filter && filter !== "all") {
+            throw new Error("Invalid filter value. Use 'active', 'archived', or 'all'.");
+        }
+        // If filter is "all" or undefined, activeFilter remains undefined to fetch all products
+
+        // Fetch products from Stripe with the specified filter
+        const stripeProducts = stripe.products.list({
+            limit: 100,
+            active: activeFilter // undefined fetches both active and inactive
+        });
+
+        let productCount = 0;
+
+        for await (const product of stripeProducts) {
+            productCount++;
+            console.log(`Processing product ${productCount}:`, product.id);
+
+            // Fetch associated prices for each product
+            const prices = await stripe.prices.list({
+                product: product.id,
+                limit: 10 // Limit prices per product
+            });
+
+            products.push({
+                id: product.id,
+                name: product.name,
+                description: product.description || undefined,
+                active: product.active,
+                created: timestampToDateString(product.created),
+                updated: product.updated ? timestampToDateString(product.updated) : undefined,
+                metadata: product.metadata,
+                prices: prices.data.map(price => ({
+                    id: price.id,
+                    active: price.active,
+                    unit_amount: price.unit_amount || 0,
+                    currency: price.currency,
+                    recurring: price.recurring ? {
+                        interval: price.recurring.interval,
+                        interval_count: price.recurring.interval_count
+                    } : undefined
+                }))
+            });
+        }
+
+        return {
+            success: true,
+            count: products.length,
+            products: products
+        };
+    } catch (error) {
+        console.error("Error fetching products:", error);
+        throw new Error(`Failed to fetch products: ${(error as Error).message}`);
+    }
+};
+
+
 export const updatePricesService = async (data: PriceUpdateRequest)=> {
+	console.log('data: ', data);
 	try {
 		// Validate environment variables for product IDs
 		if (!silverProductId || !bronzeProductId || !goldProductId) {
@@ -265,7 +333,10 @@ export async function getAllSubscriptions() {
 		});
 	}
 
-	return subscriptions;
+	return {
+		success: true,
+		subscriptions
+	};
 }
 
 export async function getSubscriptionById(subscriptionId: string) {
@@ -292,7 +363,7 @@ export async function getSubscriptionById(subscriptionId: string) {
 export async function subscriptionExpireInAWeekService() {
 	const subscriptions = await getAllSubscriptions();
 
-	const expiringSubscriptions = subscriptions.filter((subscription) => {
+	const expiringSubscriptions = subscriptions.subscriptions.filter((subscription: any) => {
 		const currentPeriodEnd = subscription.current_period_end;
 
 		if (!currentPeriodEnd) {

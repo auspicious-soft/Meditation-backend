@@ -12,6 +12,11 @@ export const checkValidAdminRole = (req: Request, res: Response, next: any) => {
     if (role !== 'admin') return res.status(403).json({ success: false, message: "Invalid role" })
     else return next()
 }
+export const checkValidCompanyRole = (req: Request, res: Response, next: any) => {
+    const { role } = req.headers
+    if (role !== 'company') return res.status(403).json({ success: false, message: "Invalid role" })
+    else return next()
+}
 
 interface Payload {
     description?: string;

@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import mongoose from 'mongoose';
 import { httpStatusCode } from 'src/lib/constant';
 import { errorParser } from 'src/lib/errors/error-response-handler';
-import { afterSubscriptionCreatedService, cancelSubscriptionService, createSubscriptionService, getAllCouponsService, getAllSubscriptions, getPricesService, getSubscriptionById, subscriptionExpireInAWeekService, subscriptionExpireRemainderService, updatePricesService } from 'src/services/subscription/subscription-service';
+import { afterSubscriptionCreatedService, cancelSubscriptionService, createSubscriptionService, getAllCouponsService, getAllProductsService, getAllSubscriptions, getPricesService, getSubscriptionById, subscriptionExpireInAWeekService, subscriptionExpireRemainderService, updatePricesService } from 'src/services/subscription/subscription-service';
 
 export const updatePrices = async (req: any, res: Response) => {
   try {
@@ -46,23 +46,21 @@ export const getAllCoupons = async (req: Request, res: Response) => {
       });
     }
   }
-  export async function getAllSubscriptionsHandler( res: Response){
+
+  
+  export async function getAllSubscriptionsHandler(req: Request, res: Response) {
     try {
       const subscriptions = await getAllSubscriptions();
-      res.status(200).json({
-        success: true,
-        data: subscriptions,
-        count: subscriptions.length,
-      });
-    } catch (error) {
-      res.status(500).json({
+      return res.status(httpStatusCode.OK).json(subscriptions);
+    } catch (error: any) {
+      const { code, message } = errorParser(error);
+      return res.status(code || httpStatusCode.INTERNAL_SERVER_ERROR).json({
         success: false,
-        message: 'Error retrieving subscriptions',
-        error: error instanceof Error ? error.message : 'Unknown error',
+        message: message || "An error occurred while retrieving the subscriptions",
       });
     }
   }
-  
+
   export async function getSubscriptionByIdHandler(req: Request, res: Response) {
     try {
       const { subscriptionId } = req.params;
@@ -154,3 +152,14 @@ export const subscriptionExpireRemainder = async (req: Request, res: Response) =
       return res.status(code || httpStatusCode.INTERNAL_SERVER_ERROR).json({ success: false, message: message || "An error occurred" });
   }
 }
+export const getAllStripeProducts = async (req: Request, res: Response) => {
+  try {
+      const response = await getAllProductsService(typeof req?.query?.status === 'string' ? req.query.status : undefined)
+      return res.status(httpStatusCode.OK).json(response)
+  } catch (error) {
+      const { code, message } = errorParser(error)
+      return res.status(code || httpStatusCode.INTERNAL_SERVER_ERROR).json({ success: false, message: message || "An error occurred" });
+  }
+}
+
+

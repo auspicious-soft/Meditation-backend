@@ -5,7 +5,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import connectDB from "./configF/db";
 import { admin, user,company, level, bestfor, collection, audio } from "./routes";
-import { checkValidAdminRole } from "./utils";
+import { checkValidAdminRole, checkValidCompanyRole } from "./utils";
 import bodyParser from "body-parser";
 import { login, newPassswordAfterOTPVerified, verifyOtpPasswordReset } from "./controllers/admin/admin";
 import { forgotPassword } from "./controllers/admin/admin";
@@ -52,8 +52,8 @@ app.get("/", (_, res: any) => {
 });
  
 app.use("/api/admin",checkAuth, checkValidAdminRole, admin);
+app.use("/api/company",checkAuth,checkValidCompanyRole,company)
 app.use("/api/user", user);
-app.use("/api/company",company)
 app.post("/api/login", login);
 app.post("/api/company/signup", companySignup);
 app.post("/api/company/verify-email", verifyCompanyEmail);

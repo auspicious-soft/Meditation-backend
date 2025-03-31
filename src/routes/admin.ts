@@ -10,7 +10,7 @@ import { deleteAudio, updateAudio, uploadAudio } from "src/controllers/audio/aud
 import { createCompany, deleteCompanyById, getAllCompanies } from "src/controllers/company/company";
 import { createBestFor, deleteBestFor } from "src/controllers/bestfor/bestfor-controller";
 import { createLevel, deleteLevel } from "src/controllers/level/level-controller";
-import { getAllCoupons, getAllSubscriptionsHandler, getPrices, getSubscriptionByIdHandler, subscriptionExpireInAWeek, subscriptionExpireRemainder, updatePrices } from "src/controllers/subscription/subscription-controller";
+import { getAllCoupons, getAllStripeProducts, getAllSubscriptionsHandler, getPrices, getSubscriptionByIdHandler, subscriptionExpireInAWeek, subscriptionExpireRemainder, updatePrices } from "src/controllers/subscription/subscription-controller";
 import { sendNotificationToUser, sendNotificationToUsers } from "src/controllers/notifications/notifications-controller";
 import { createCompanyJoinRequest, deleteCompanyJoinRequest, getAllCompanyJoinRequests, getCompanyJoinRequestById, updateCompanyJoinRequest } from "src/controllers/company-join-requests/company-join-requests-controller";
 import { createFAQ, deleteFAQ, getAllFAQ, getFAQById, updateFAQ } from "src/controllers/FAQs/FAQs-controller";
@@ -41,6 +41,7 @@ router.post("/subscription-expire-remainder/:id", subscriptionExpireRemainder)
 
 //stripe
 router.post('/update-prices', updatePrices);
+router.get('/products', getAllStripeProducts);
 router.get('/prices', getPrices);
 router.get('/coupons', getAllCoupons);
 router.get('/subscriptions', getAllSubscriptionsHandler);

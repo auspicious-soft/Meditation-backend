@@ -23,7 +23,7 @@ const schemas = [adminModel, usersModel, companyModels];
 export const loginService = async (payload: any, req: any, res: Response) => {
   const { email, password } = payload;
   let user: any = null;
-
+  const isMobileApp = req.headers["x-client-type"] === "mobile";
   for (const schema of schemas) {
     user = await (schema as any).findOne({ email }).select("+password");
     if (user) break;
@@ -42,16 +42,23 @@ export const loginService = async (payload: any, req: any, res: Response) => {
   if (!user.isAccountActive) {
     return errorResponseHandler("User account is not activated", httpStatusCode.FORBIDDEN, res);
   }}
+  if (isMobileApp && user.isVerifiedByCompany !== "approved") {
+    return errorResponseHandler("User is not verified by company", httpStatusCode.FORBIDDEN, res);
+  }
+  if(!isMobileApp && user.isVerifiedByAdmin !== "approved" ){
+    return errorResponseHandler("User is not verified by company", httpStatusCode.FORBIDDEN, res);
+  }
 
   const isPasswordValid = await bcrypt.compare(password, user.password);
   if (!isPasswordValid) {
     return errorResponseHandler("Invalid email or password", httpStatusCode.UNAUTHORIZED, res);
   }
+  
 
   const userObject = user.toObject();
   delete userObject.password;
 
-  const isMobileApp = req.headers["x-client-type"] === "mobile";
+
 
   let token;
   if (isMobileApp) {
@@ -290,9 +297,9 @@ export const AnalyticsService = async ( res: Response) => {
   const totalDownload = 0;
   const totalAudioPlays = 0;
   const allSubscription = await getAllSubscriptions()
-  const subscriptionExpireToday = allSubscription.filter((sub) => new Date(sub.current_period_end) === new Date(new Date().setDate(new Date().getDate() + 1)))
+  const subscriptionExpireToday = allSubscription.subscriptions.filter((sub) => new Date(sub.current_period_end) === new Date(new Date().setDate(new Date().getDate() + 1)))
   // const paymentToday = allSubscription.filter((sub) => new Date(sub.created) === new Date(new Date().setDate(new Date().getDate() )))
-  const paymentToday = allSubscription.filter((sub) => {
+  const paymentToday = allSubscription.subscriptions.filter((sub) => {
     const subDate = new Date(sub.created);
     const today = new Date();
   

@@ -26,30 +26,30 @@ router.post("/login", login);
 router.patch("/email/verify", verifyEmail);
 
 router.get("/dashboard", checkAuth, getDashboardStats);
-router.post("/audio-history", UserAudioHistory);
-router.route("/:id").get(getUserInfo).put(editUserInfo);
+router.post("/audio-history",checkAuth, UserAudioHistory);
+router.route("/:id").all(checkAuth).get(getUserInfo).put(editUserInfo);
 
 //HOME PAGE
-router.post("/home", getHomePage);
+router.post("/home",checkAuth, getHomePage);
 
 //SEARCH Routes
-router.get("/search/audio", searchAudios);
-router.get("/audio/filters", getfilterOptions);
+router.get("/search/audio",checkAuth, searchAudios);
+router.get("/audio/filters",checkAuth, getfilterOptions);
 
 //Collection routes
-router.get("/discover/collections", getAllCollections);
-router.get("/collections/:id/audios", getCollectionWithAudio);
-router.get("/search/collections", searchCollections);
+router.get("/discover/collections",checkAuth, getAllCollections);
+router.get("/collections/:id/audios",checkAuth, getCollectionWithAudio);
+router.get("/search/collections",checkAuth, searchCollections);
 
 //User-details routes
 router.put("/update/details",checkAuth, updateUserDetails);
 
 //Audio routes
-router.get("/audio/:id", getAudioById);
+router.get("/audio/:id",checkAuth, getAudioById);
 
 //FAQs routes
-router.get("/FAQs/get-all",getAllFAQ);
-router.get("/FAQs/:id", getFAQById);
+router.get("/FAQs/get-all",checkAuth, getAllFAQ);
+router.get("/FAQs/:id",checkAuth, getFAQById);
 
 
 
