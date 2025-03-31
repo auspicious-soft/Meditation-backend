@@ -6,6 +6,7 @@ import { errorResponseHandler } from "../../lib/errors/error-response-handler";
 import { httpStatusCode } from "../../lib/constant";
 import mongoose from "mongoose";
 import { AudioModel } from "src/models/audio/audio-schema";
+import { deleteFileFromS3 } from "src/configF/s3";
 
 export const createCollectionService = async (req: Request, res: Response) => {
   const { name, imageUrl, levels, bestFor, description } = req.body;
@@ -414,6 +415,10 @@ export const deleteCollectionService = async (req: Request, res: Response) => {
         httpStatusCode.BAD_REQUEST,
         res
       );
+    }
+
+    if (collection.imageUrl) {
+        await deleteFileFromS3(collection.imageUrl);
     }
     
     // Delete collection
