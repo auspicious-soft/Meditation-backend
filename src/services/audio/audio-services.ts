@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import mongoose, { isValidObjectId } from "mongoose";
+import { deleteFileFromS3 } from "src/configF/s3";
 import { httpStatusCode } from "src/lib/constant";
 import { errorResponseHandler } from "src/lib/errors/error-response-handler";
 import { AudioModel } from "src/models/audio/audio-schema";
@@ -219,6 +220,16 @@ export const updateAudioService = async (req: Request, res: Response) => {
 export const deleteAudioService = async (req: Request, res: Response) => {
  
     const { id } = req.params;
+    const audio = await AudioModel.findById(id);
+    if (!audio) {
+      return errorResponseHandler("Audio not found", httpStatusCode.NOT_FOUND, res);
+    }
+    if(audio.audioUrl) {
+      await deleteFileFromS3(audio.audioUrl)
+    }
+    if(audio.imageUrl){
+      await deleteFileFromS3(audio.imageUrl)
+    }
     const deletedAudio = await AudioModel.findByIdAndDelete(id);
     if (!deletedAudio) {
       return errorResponseHandler("Audio not found", httpStatusCode.NOT_FOUND, res);
