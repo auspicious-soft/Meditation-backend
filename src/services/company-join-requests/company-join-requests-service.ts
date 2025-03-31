@@ -44,6 +44,7 @@ export const getAllCompanyJoinRequestsService = async (res: Response) => {
 };
 
 export const updateCompanyJoinRequestService = async (id: string, payload: any, res: Response) => {
+	console.log('id: ', id);
 	
 	const joinRequest = await companyJoinRequestsModel.find({ companyId: id });
 	const companyData = await companyModels.findById(id);
@@ -52,10 +53,10 @@ export const updateCompanyJoinRequestService = async (id: string, payload: any, 
 	let updatedJoinRequest;
 	if (payload.status === "deny") {
 		updatedJoinRequest = await companyJoinRequestsModel.findOneAndUpdate({companyId : id},{ status: "Rejected" }, { new: true });
-		await usersModel.findByIdAndUpdate(id, { isVerifiedByAdmin: "rejected" }, { new: true });
+		await companyModels.findByIdAndUpdate(id, { isVerifiedByAdmin: "rejected" }, { new: true });
 	} else if (payload.status === "approve") {
 		updatedJoinRequest = await companyJoinRequestsModel.findOneAndUpdate({companyId : id}, { status: "Approved" }, { new: true });
-		await usersModel.findByIdAndUpdate(id, { isVerifiedByAdmin: "approved" }, { new: true });
+		await companyModels.findByIdAndUpdate(id, { isVerifiedByAdmin: "approved" }, { new: true });
 		const EmailVerificationToken = await generatePasswordResetToken(companyData.email);
 		if (EmailVerificationToken) {
 			await sendUserVerificationEmail(companyData.email, EmailVerificationToken.token);

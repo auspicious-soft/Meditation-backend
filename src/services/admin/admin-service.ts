@@ -42,10 +42,10 @@ export const loginService = async (payload: any, req: any, res: Response) => {
   if (!user.isAccountActive) {
     return errorResponseHandler("User account is not activated", httpStatusCode.FORBIDDEN, res);
   }}
-  if (isMobileApp && user.isVerifiedByCompany !== "approved") {
+  if (isMobileApp &&  user.role !== "admin" && user.isVerifiedByCompany !== "approved") {
     return errorResponseHandler("User is not verified by company", httpStatusCode.FORBIDDEN, res);
   }
-  if(!isMobileApp && user.isVerifiedByAdmin !== "approved" ){
+  if(!isMobileApp && user.role !== "admin" && user.isVerifiedByAdmin !== "approved" ){
     return errorResponseHandler("User is not verified by Admin", httpStatusCode.FORBIDDEN, res);
   }
 
