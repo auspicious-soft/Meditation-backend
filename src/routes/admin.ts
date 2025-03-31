@@ -13,6 +13,7 @@ import { createLevel, deleteLevel } from "src/controllers/level/level-controller
 import { getAllCoupons, getAllSubscriptionsHandler, getPrices, getSubscriptionByIdHandler, subscriptionExpireInAWeek, subscriptionExpireRemainder, updatePrices } from "src/controllers/subscription/subscription-controller";
 import { sendNotificationToUser, sendNotificationToUsers } from "src/controllers/notifications/notifications-controller";
 import { createCompanyJoinRequest, deleteCompanyJoinRequest, getAllCompanyJoinRequests, getCompanyJoinRequestById, updateCompanyJoinRequest } from "src/controllers/company-join-requests/company-join-requests-controller";
+import { createFAQ, deleteFAQ, getAllFAQ, getFAQById, updateFAQ } from "src/controllers/FAQs/FAQs-controller";
 
 const router = Router();
 
@@ -56,4 +57,16 @@ router.get("/company-join-requests", getAllCompanyJoinRequests);
 router.put("/company-join-requests/:id", updateCompanyJoinRequest);
 router.delete("/company-join-requests/:id", deleteCompanyJoinRequest);
 
+//FAQs routes
+// Create a new FAQ
+router.route("/FAQs").post( createFAQ).get(getAllFAQ);
+
+// Get an FAQ by ID
+router.get("/FAQs/:id", getFAQById);
+
+// Update an FAQ by ID
+router.put("/FAQs/:id", updateFAQ);
+
+// Delete an FAQ by ID
+router.delete("/FAQs/:id", deleteFAQ);
 export { router }
