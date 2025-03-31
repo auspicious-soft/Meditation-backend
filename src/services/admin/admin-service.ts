@@ -46,7 +46,7 @@ export const loginService = async (payload: any, req: any, res: Response) => {
     return errorResponseHandler("User is not verified by company", httpStatusCode.FORBIDDEN, res);
   }
   if(!isMobileApp && user.isVerifiedByAdmin !== "approved" ){
-    return errorResponseHandler("User is not verified by company", httpStatusCode.FORBIDDEN, res);
+    return errorResponseHandler("User is not verified by Admin", httpStatusCode.FORBIDDEN, res);
   }
 
   const isPasswordValid = await bcrypt.compare(password, user.password);

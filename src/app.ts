@@ -51,11 +51,11 @@ app.get("/", (_, res: any) => {
   res.send("Hello world entry point 🚀✅");
 });
  
+app.post("/api/company/signup", companySignup);
 app.use("/api/admin",checkAuth, checkValidAdminRole, admin);
 app.use("/api/company",checkAuth,checkValidCompanyRole,company)
 app.use("/api/user", user);
 app.post("/api/login", login);
-app.post("/api/company/signup", companySignup);
 app.post("/api/company/verify-email", verifyCompanyEmail);
 app.use("/api/collection", collection);
 app.use('/api/level', level);
