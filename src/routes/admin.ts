@@ -6,7 +6,7 @@ import { checkMulter } from "../lib/errors/error-response-handler"
 import { verifyOtpPasswordReset } from "src/controllers/user/user";
 import { checkAuth } from "src/middleware/check-auth";
 import { createCollection, deleteCollection, updateCollection } from "src/controllers/collection/collection-controller";
-import { deleteAudio, uploadAudio } from "src/controllers/audio/audio-controller";
+import { deleteAudio, updateAudio, uploadAudio } from "src/controllers/audio/audio-controller";
 import { createCompany, deleteCompanyById, getAllCompanies } from "src/controllers/company/company";
 import { createBestFor, deleteBestFor } from "src/controllers/bestfor/bestfor-controller";
 import { createLevel, deleteLevel } from "src/controllers/level/level-controller";
@@ -24,6 +24,7 @@ router.post("/create-level", createLevel);
 router.get("/dashboard", getDashboardStats)
 router.get("/get-all-companies", getAllCompanies);
 router.put("/update/collection/:id", updateCollection);
+router.put("/update/audio/:id",updateAudio)
 router.delete("/delete-collection/:id",deleteCollection)
 router.delete("/delete-company/:id", deleteCompanyById);
 router.delete("/delete-user/:id", deleteAUser);

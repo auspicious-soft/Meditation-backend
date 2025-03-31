@@ -5,6 +5,6 @@ const router = Router()
 
 
 router.get("/", getAllAudio);
-router.route("/:id").get(getAudioById).put(updateAudio)
+router.route("/:id").get(getAudioById)
 
 export {router}
