@@ -1,5 +1,5 @@
 import { Router } from "express";
-import {  deleteAUser, forgotPassword, getAnalytics, getDashboardStats,  login,  newPassswordAfterOTPVerified,} from "../controllers/admin/admin";
+import {  deleteAUser, forgotPassword, getAllUsers, getAnalytics, getDashboardStats,  login,  newPassswordAfterOTPVerified,} from "../controllers/admin/admin";
 // import { checkAdminAuth } from "../middleware/check-auth";
 import { upload } from "../configF/multer";
 import { checkMulter } from "../lib/errors/error-response-handler"
@@ -22,6 +22,7 @@ router.post("/upload-collection",createCollection)
 router.post("/create-company", createCompany);
 router.post("/create-bestfor",createBestFor)
 router.post("/create-level", createLevel);
+router.get("/get-all-users", getAllUsers);
 router.get("/dashboard", getDashboardStats)
 router.get("/get-all-companies", getAllCompanies);
 router.put("/update/collection/:id", updateCollection);

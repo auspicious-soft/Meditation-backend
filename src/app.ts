@@ -11,6 +11,7 @@ import { login, newPassswordAfterOTPVerified, verifyOtpPasswordReset } from "./c
 import { forgotPassword } from "./controllers/admin/admin";
 import { afterSubscriptionCreated } from "./controllers/subscription/subscription-controller";
 import { companySignup, verifyCompanyEmail } from "./controllers/company/company";
+import { checkAuth } from "./middleware/check-auth";
 
 
 
@@ -50,7 +51,7 @@ app.get("/", (_, res: any) => {
   res.send("Hello world entry point 🚀✅");
 });
  
-app.use("/api/admin", checkValidAdminRole, admin);
+app.use("/api/admin",checkAuth, checkValidAdminRole, admin);
 app.use("/api/user", user);
 app.use("/api/company",company)
 app.post("/api/login", login);

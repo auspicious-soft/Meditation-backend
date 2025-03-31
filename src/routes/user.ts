@@ -24,7 +24,7 @@ router.post("/signup", signup);
 router.post("/resend-otp", resendOtp);
 router.post("/login", login);
 router.patch("/email/verify", verifyEmail);
-router.get("/get-all-users", getAllUsers);
+
 router.get("/dashboard", checkAuth, getDashboardStats);
 router.post("/audio-history", UserAudioHistory);
 router.route("/:id").get(getUserInfo).put(editUserInfo);
