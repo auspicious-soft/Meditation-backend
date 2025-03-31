@@ -16,6 +16,7 @@ import { UserAudioHistory } from "src/controllers/useraudiohistory/useraudiohist
 import { getAudioById, getfilterOptions, searchAudios } from "src/controllers/audio/audio-controller";
 import { getAllCollections, getCollectionById, getCollectionWithAudio } from "src/controllers/collection/collection-controller";
 import { searchCollections } from "src/controllers/company/company";
+import { getAllFAQ, getFAQById } from "src/controllers/FAQs/FAQs-controller";
 
 const router = Router();
 
@@ -46,6 +47,9 @@ router.put("/update/details",checkAuth, updateUserDetails);
 //Audio routes
 router.get("/audio/:id", getAudioById);
 
+//FAQs routes
+router.get("/FAQs/get-all",getAllFAQ);
+router.get("/FAQs/:id", getFAQById);
 
 
 
