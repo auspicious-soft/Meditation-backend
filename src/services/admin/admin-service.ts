@@ -52,7 +52,6 @@ export const loginService = async (payload: any, req: any, res: Response) => {
     if(company[0].subscriptionStatus === "inactive"){
       return errorResponseHandler("Company subscription is inactive", httpStatusCode.FORBIDDEN, res);
     }
-    return errorResponseHandler("User is not verified by Admin", httpStatusCode.FORBIDDEN, res);
   }
 
   const isPasswordValid = await bcrypt.compare(password, user.password);
