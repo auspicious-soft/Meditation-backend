@@ -29,7 +29,7 @@ router.patch("/users/:id/deactivate", deactivateUser);
 
 //join-requests routes
 router.post("/join-requests", createJoinRequest);
-router.get("/join-requests/:id", getJoinRequestById);
+router.get("/join-requests", getJoinRequestById);
 router.get("/join-requests", getAllJoinRequests);
 router.put("/join-requests/:id", updateJoinRequest);
 router.delete("/join-requests/:id", deleteJoinRequest);

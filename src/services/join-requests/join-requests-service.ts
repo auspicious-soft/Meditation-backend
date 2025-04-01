@@ -25,17 +25,51 @@ export const createJoinRequestService = async (payload: any) => {
 	// return { success: true, data: newJoinRequest };
 };
 
-export const getJoinRequestByIdService = async (id: string, res: Response) => {
-	try {
-		// TODO: take the company id from token
-		const joinRequest = await joinRequestsModel.find({ companyId: id }).populate("userId").populate("companyId");
-		if (!joinRequest) return errorResponseHandler("Join request not found", httpStatusCode.NOT_FOUND, res);
 
-		return res.status(httpStatusCode.OK).json({ success: true, data: joinRequest });
-	} catch (error) {
-		console.error("Error in getJoinRequestById:", error);
-		return errorResponseHandler("Failed to fetch join request", httpStatusCode.INTERNAL_SERVER_ERROR, res);
-	}
+
+export const getJoinRequestByIdService = async (companyDetails: any,payload: any, res: Response) => {
+
+        const page = parseInt(payload.page) || 1;
+        const limit = parseInt(payload.limit) || 10;
+        const skip = (page - 1) * limit;
+
+        // Get total count of documents
+        const total = await joinRequestsModel.countDocuments({ 
+            companyId: companyDetails.currentUser, 
+            status: "Pending" 
+        });
+
+        // Fetch paginated join requests
+        const joinRequests = await joinRequestsModel
+            .find({ 
+                companyId: companyDetails.currentUser, 
+                status: "Pending" 
+            })
+            .populate("userId")
+            .populate("companyId")
+            .skip(skip)
+            .limit(limit);
+
+        if (!joinRequests || joinRequests.length === 0) {
+            return errorResponseHandler("Join requests not found", httpStatusCode.NOT_FOUND, res);
+        }
+
+        // Prepare pagination metadata
+        const pagination = {
+            total,
+            page,
+            limit,
+            totalPages: Math.ceil(total / limit),
+            hasNextPage: page < Math.ceil(total / limit),
+            hasPrevPage: page > 1
+        };
+
+        return res.status(httpStatusCode.OK).json({ 
+            success: true, 
+            data: joinRequests,
+            pagination 
+        });
+    
 };
 export const getAllJoinRequestsService = async (id: string, res: Response) => {
 	try {
