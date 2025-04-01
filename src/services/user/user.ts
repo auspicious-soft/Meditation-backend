@@ -427,6 +427,9 @@ export const createUserService = async (payload: any, res: Response) => {
 	const existingUser = await usersModel.findOne({ email });
 	if (existingUser) return errorResponseHandler("User email already exists", httpStatusCode.CONFLICT, res);
 
+	const existingCompany = await companyModels.findOne({ companyName });
+	if (!existingCompany) return errorResponseHandler("Company doesn't exist.", httpStatusCode.CONFLICT, res);
+
 	const hashedPassword = await bcrypt.hash(password, 10);
 	const identifier = customAlphabet("0123456789", 5);
 	const newUser = new usersModel({
@@ -438,6 +441,7 @@ export const createUserService = async (payload: any, res: Response) => {
 		dob: new Date(dob).toISOString().slice(0, 10),
 		gender,
 		companyName,
+		isVerifiedByCompany: "approved",
 	});
 	await newUser.save();
 	console.log('email: ', email);
@@ -462,15 +466,27 @@ export const getUserForCompanyService = async (id: string, res: Response) => {
 		data: user,
 	};
 };
-export const getAllUserForCompanyService = async (company: any, res: Response) => {
+export const getAllUserForCompanyService = async (company: any,payload: any, res: Response) => {
+	const page = parseInt(payload.page as string) || 1;
+	const limit = parseInt(payload.limit as string) || 10;
+	const skip = (page - 1) * limit;
 	const companyDetails = await companyModels.find({_id:company.currentUser});
-	const users = await usersModel.find({companyName:companyDetails[0]?.companyName, isVerifiedByCompany:"approved"});
+	const users = await usersModel.find({companyName:companyDetails[0]?.companyName, isVerifiedByCompany:"approved"}) .sort({ createdAt: -1 })
+	.skip(skip)
+	.limit(limit);
+	const totalUsers = await usersModel.countDocuments({companyName:companyDetails[0]?.companyName, isVerifiedByCompany:"approved"});
 	if (!users) return errorResponseHandler("User not found", httpStatusCode.NOT_FOUND, res);
 
 	return {
 		success: true,
 		message: "User fetched successfully",
-		data: users,
+		data: {
+			users,
+		
+			totalUsers,
+			page,
+			limit,
+		},
 	};
 };
 

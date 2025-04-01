@@ -78,9 +78,7 @@ export const uploadAudioService = async(req : Request, res : Response)=>{
 };
 
 export const getAllAudiosService = async (req: Request, res: Response) => {
-// Extract pagination parameters from query
-// const { page = "1", limit = "10" } = req.query;
-console.log('req.query: ', req.query);
+
  const page = parseInt(req.query.page as string) || 1;
   const limit = parseInt(req.query.limit as string) || 0;
   const offset = (page - 1) * limit;
