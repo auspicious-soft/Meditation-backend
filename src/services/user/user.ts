@@ -136,7 +136,7 @@ export const verifyEmailService = async (req: any, res: Response) => {
 	const user = await usersModel.findByIdAndUpdate(getUser._id, { emailVerified: true }, { new: true });
 	if (!user) return errorResponseHandler("User not found", httpStatusCode.NOT_FOUND, res);
 	await sendUserSignupEmail(user.email, user.firstName+" "+ user.lastName);
-	await passwordResetTokenModel.findByIdAndDelete(tokenData._id);
+	// await passwordResetTokenModel.findByIdAndDelete(tokenData._id);
 	const userData = user.toObject() as any;
 	delete userData.password;
 	const token = jwt.sign({ id: userData._id, role: userData.role }, process.env.JWT_SECRET_PHONE as string);	

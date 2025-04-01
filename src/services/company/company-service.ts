@@ -240,8 +240,8 @@ export const updateCompanyService = async (payload: any, req: any, res: Response
 	};
 };
 
-export const getCompanyByIdService = async (id: string, res: Response) => {
-	const company = await companyModels.findById(id);
+export const getCompanyByIdService = async (user: any, res: Response) => {
+	const company = await companyModels.findById(user.id);
 	if (!company) {
 		return errorResponseHandler("Company not found", httpStatusCode.NOT_FOUND, res);
 	}
@@ -269,7 +269,8 @@ export const deleteCompanyService = async (id: string, res: Response) => {
 	};
 };
 
-export const getCompanyDashboardService = async (id: string, res: Response) => {
+export const getCompanyDashboardService = async (id: any, res: Response) => {
+	console.log('id: ', id);
 	try {
 		const company = await companyModels.findById(id);
 		if (!company) {

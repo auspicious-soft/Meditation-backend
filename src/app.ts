@@ -54,7 +54,7 @@ app.get("/", (_, res: any) => {
 app.post("/api/company/signup", companySignup);
 app.post("/api/company/verify-email", verifyCompanyEmail);
 app.use("/api/admin", checkValidAdminRole, admin);
-app.use("/api/company",checkValidCompanyRole,company)
+app.use("/api/company",checkAuth,checkValidCompanyRole,company)
 app.use("/api/user", user);
 app.post("/api/login", login);
 app.use("/api/collection", collection);

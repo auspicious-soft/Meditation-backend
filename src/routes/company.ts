@@ -9,7 +9,7 @@ import { createUser, deactivateUser, deleteUser, editUserInfo, getAllUserForComp
 
 const router = Router();
 //Dashboard routes
-router.get("/dashboard/:id", getCompanyDashboard);
+router.get("/dashboard", getCompanyDashboard);
 
 
 router.get("/get-company-by-id/:id", getCompanyById);

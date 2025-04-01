@@ -41,12 +41,12 @@ export const loginService = async (payload: any, req: any, res: Response) => {
   if (!user.isAccountActive) {
     return errorResponseHandler("User account is not activated", httpStatusCode.FORBIDDEN, res);
   }}
-  if (isMobileApp &&  user.role !== "admin" && user.isVerifiedByCompany !== "approved") {
-    return errorResponseHandler("User is not verified by company", httpStatusCode.FORBIDDEN, res);
-  }
-  if(!isMobileApp && user.role !== "admin" && user.isVerifiedByAdmin !== "approved" ){
-    return errorResponseHandler("User is not verified by Admin", httpStatusCode.FORBIDDEN, res);
-  }
+  // if (isMobileApp &&  user.role !== "admin" && user.isVerifiedByCompany !== "approved") {
+  //   return errorResponseHandler("User is not verified by company", httpStatusCode.FORBIDDEN, res);
+  // }
+  // if(!isMobileApp && user.role !== "admin" && user.isVerifiedByAdmin !== "approved" ){
+  //   return errorResponseHandler("User is not verified by Admin", httpStatusCode.FORBIDDEN, res);
+  // }
   if(isMobileApp && user.role ==="user"){
     const company = await companyModels.find({companyName:user.companyName});                                                     
     if(company[0].subscriptionStatus === "inactive"){
