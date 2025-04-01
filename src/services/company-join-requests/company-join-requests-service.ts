@@ -42,7 +42,7 @@ export const getAllCompanyJoinRequestsService = async (res: Response) => {
 
 	return { success: true, data: joinRequest };
 };
- 
+
 export const updateCompanyJoinRequestService = async (id: string, payload: any, res: Response) => {
 	console.log('id: ', id);
 	
