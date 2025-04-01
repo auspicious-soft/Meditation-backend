@@ -49,7 +49,7 @@ export const updateCompanyJoinRequestService = async (id: string, payload: any, 
 	const joinRequest = await companyJoinRequestsModel.find({ companyId: id });
 	const companyData = await companyModels.findById(id);
 	if (!joinRequest) return errorResponseHandler("Join request not found", httpStatusCode.NOT_FOUND, res);
-	if (!companyData) return errorResponseHandler("User data not found", httpStatusCode.NOT_FOUND, res);
+	if (!companyData) return errorResponseHandler("Company data not found", httpStatusCode.NOT_FOUND, res);
 	let updatedJoinRequest;
 	if (payload.status === "deny") {
 		updatedJoinRequest = await companyJoinRequestsModel.findOneAndUpdate({companyId : id},{ status: "Rejected" }, { new: true });
