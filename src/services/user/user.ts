@@ -623,13 +623,137 @@ export const getDashboardStatsService = async (payload: any, res: Response) => {
 // };
 
 
+// export const getHomePageService = async (payload: any, res: Response) => {
+//     // Suggested Collection with population
+//     const suggestedCollection = await collectionModel
+//         .find()
+//         .limit(1)
+//         .populate('bestFor')  // Populate bestFor
+//         .populate('levels');  // Populate levels
+//     if (!suggestedCollection) return errorResponseHandler("User not found", httpStatusCode.NOT_FOUND, res);
+    
+//     // Trending Audio with population
+//     const trendingAudio = await userAudioHistoryModel.aggregate([
+//         {
+//             $group: {
+//                 _id: "$audio_id",
+//                 count: { $sum: 1 },
+//             },
+//         },
+//         {
+//             $sort: { count: -1 },
+//         },
+//         {
+//             $limit: 5,
+//         },
+//         {
+//             $lookup: {
+//                 from: "audios",
+//                 localField: "_id",
+//                 foreignField: "_id",
+//                 as: "audioDetails",
+//             },
+//         },
+//         {
+//             $unwind: {
+//                 path: "$audioDetails",
+//                 preserveNullAndEmptyArrays: false,
+//             },
+//         },
+//         {
+//             $lookup: {
+//                 from: "bestfors",  // Assuming this is the collection name for bestFor
+//                 localField: "audioDetails.bestFor",
+//                 foreignField: "_id",
+//                 as: "audioDetails.bestFor",
+//             },
+//         },
+//         {
+//             $lookup: {
+//                 from: "levels",  // Assuming this is the collection name for levels
+//                 localField: "audioDetails.levels",
+//                 foreignField: "_id",
+//                 as: "audioDetails.levels",
+//             },
+//         },
+//     ]);
+
+//     // Collection with population
+//     const collection = await collectionModel
+//         .find()
+//         .populate('bestFor')
+//         .populate('levels');
+    
+//     const meditationType = await bestForModel.aggregate([
+//         {
+//             $lookup: {
+//                 from: "collections",
+//                 localField: "_id",
+//                 foreignField: "bestFor",
+//                 as: "collections",
+//             },
+//         },
+//         {
+//             $unwind: {
+//                 path: "$collections",
+//                 preserveNullAndEmptyArrays: false,
+//             },
+//         },
+//         {
+//             $lookup: {
+//                 from: "audios",
+//                 localField: "collections._id",
+//                 foreignField: "collectionType",
+//                 as: "audios",
+//             },
+//         },
+//         {
+//             $group: {
+//                 _id: "$_id",
+//                 name: { $first: "$name" },
+//                 audioCount: { $sum: { $size: "$audios" } },
+//             },
+//         },
+//     ]);
+
+//     const bestForType = await bestForModel.find({ name: "Breathing" });
+
+//     // Breathing with population
+//     const breathing = await AudioModel
+//         .find()
+//         .populate({
+//             path: "collectionType",
+//             match: { bestFor: new mongoose.Types.ObjectId(bestForType[0]._id) },
+//             populate: [
+//                 { path: 'bestFor' },
+//                 { path: 'levels' }
+//             ]
+//         })
+//         .populate('bestFor')
+//         .populate('levels')
+//         .exec();
+
+//     return {
+//         success: true,
+//         message: `Home page fetched successfully`,
+//         data: {
+//             suggestedCollection,
+//             trendingAudio,
+//             collection,
+//             breathing,
+//             meditationType,
+//         },
+//     };
+// };
+
+
 export const getHomePageService = async (payload: any, res: Response) => {
     // Suggested Collection with population
     const suggestedCollection = await collectionModel
         .find()
         .limit(1)
-        .populate('bestFor')  // Populate bestFor
-        .populate('levels');  // Populate levels
+        .populate('bestFor')
+        .populate('levels');
     if (!suggestedCollection) return errorResponseHandler("User not found", httpStatusCode.NOT_FOUND, res);
     
     // Trending Audio with population
@@ -662,7 +786,7 @@ export const getHomePageService = async (payload: any, res: Response) => {
         },
         {
             $lookup: {
-                from: "bestfors",  // Assuming this is the collection name for bestFor
+                from: "bestfors",
                 localField: "audioDetails.bestFor",
                 foreignField: "_id",
                 as: "audioDetails.bestFor",
@@ -670,7 +794,7 @@ export const getHomePageService = async (payload: any, res: Response) => {
         },
         {
             $lookup: {
-                from: "levels",  // Assuming this is the collection name for levels
+                from: "levels",
                 localField: "audioDetails.levels",
                 foreignField: "_id",
                 as: "audioDetails.levels",
@@ -678,12 +802,88 @@ export const getHomePageService = async (payload: any, res: Response) => {
         },
     ]);
 
-    // Collection with population
-    const collection = await collectionModel
-        .find()
-        .populate('bestFor')
-        .populate('levels');
-    
+    // Collection with audio count and audio details
+    const collection = await collectionModel.aggregate([
+        {
+            $lookup: {
+                from: "audios",
+                localField: "_id",
+                foreignField: "collectionType",
+                as: "audios",
+            },
+        },
+        {
+            $project: {
+                name: 1, // Include other fields you need
+                bestFor: 1,
+                levels: 1,
+                audioCount: { $size: "$audios" },
+                audios: 1, // Keep the audios array
+            },
+        },
+        {
+            $sort: { audioCount: -1 }, // Sort by audio count descending
+        },
+        {
+            $limit: 1, // Get only the top collection
+        },
+        {
+            $lookup: {
+                from: "bestfors",
+                localField: "bestFor",
+                foreignField: "_id",
+                as: "bestFor",
+            },
+        },
+        {
+            $unwind: {
+                path: "$bestFor",
+                preserveNullAndEmptyArrays: true,
+            },
+        },
+        {
+            $lookup: {
+                from: "levels",
+                localField: "levels",
+                foreignField: "_id",
+                as: "levels",
+            },
+        },
+        // Add population for audios' bestFor and levels
+        {
+            $unwind: {
+                path: "$audios",
+                preserveNullAndEmptyArrays: true,
+            },
+        },
+        {
+            $lookup: {
+                from: "bestfors",
+                localField: "audios.bestFor",
+                foreignField: "_id",
+                as: "audios.bestFor",
+            },
+        },
+        {
+            $lookup: {
+                from: "levels",
+                localField: "audios.levels",
+                foreignField: "_id",
+                as: "audios.levels",
+            },
+        },
+        {
+            $group: {
+                _id: "$_id",
+                name: { $first: "$name" },
+                bestFor: { $first: "$bestFor" },
+                levels: { $first: "$levels" },
+                audioCount: { $first: "$audioCount" },
+                audios: { $push: "$audios" },
+            },
+        },
+    ]);
+
     const meditationType = await bestForModel.aggregate([
         {
             $lookup: {
@@ -739,7 +939,7 @@ export const getHomePageService = async (payload: any, res: Response) => {
         data: {
             suggestedCollection,
             trendingAudio,
-            collection,
+            collection: collection[0], // Return single object instead of array
             breathing,
             meditationType,
         },
