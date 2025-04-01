@@ -173,7 +173,7 @@ export const createUser = async (req: Request, res: Response) => {
 
 export const getAllUserForCompany = async (req: Request, res: Response) => {
     try {
-        const response = await getAllUserForCompanyService(req.body,res);
+        const response = await getAllUserForCompanyService(req,res);
         return res.status(httpStatusCode.OK).json(response);
     } catch (error: any) {
         const { code, message } = errorParser(error);

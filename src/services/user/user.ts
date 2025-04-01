@@ -462,9 +462,9 @@ export const getUserForCompanyService = async (id: string, res: Response) => {
 		data: user,
 	};
 };
-export const getAllUserForCompanyService = async (payload: any, res: Response) => {
-	//TODO : change this to user id FOR COMPANY NAME  from token
-	const users = await usersModel.find({ companyName: payload.companyName });
+export const getAllUserForCompanyService = async (company: any, res: Response) => {
+	const companyDetails = await companyModels.find({_id:company.currentUser});
+	const users = await usersModel.find({companyName:companyDetails[0]?.companyName, isVerifiedByCompany:"approved"});
 	if (!users) return errorResponseHandler("User not found", httpStatusCode.NOT_FOUND, res);
 
 	return {
