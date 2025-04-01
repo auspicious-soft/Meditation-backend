@@ -269,38 +269,84 @@ export const deleteCompanyService = async (id: string, res: Response) => {
 	};
 };
 
-export const getCompanyDashboardService = async (id: any, res: Response) => {
-	console.log('id: ', id);
-	try {
-		const company = await companyModels.findById(id);
-		if (!company) {
-			return errorResponseHandler("Company not found", httpStatusCode.NOT_FOUND, res);
-		}
+// export const getCompanyDashboardService = async (id: any, res: Response) => {
+// 	try {
+// 		const company = await companyModels.findById(id);
+// 		if (!company) {
+// 			return errorResponseHandler("Company not found", httpStatusCode.NOT_FOUND, res);
+// 		}
 
-		const companyCustomerId = company.stripeCustomerId;
-		if (!companyCustomerId) {
-			return errorResponseHandler("Stripe customer ID not found for the company", httpStatusCode.BAD_REQUEST, res);
-		}
+// 		const companyCustomerId = company.stripeCustomerId;
+// 		if (!companyCustomerId) {
+// 			return errorResponseHandler("Stripe customer ID not found for the company", httpStatusCode.BAD_REQUEST, res);
+// 		}
 
-		// Fetch transactions using the Stripe customer ID
-		const companyTransactions = await getSubscriptionsByCustomer(companyCustomerId);
-		console.log("companyTransactions: ", companyTransactions);
-		const recentUsers = await usersModel.find({ companyName: company.companyName }).sort({ createdAt: -1 }).limit(10);
+// 		// Fetch transactions using the Stripe customer ID
+// 		const companyTransactions = await getSubscriptionsByCustomer(companyCustomerId);
+// 		const recentUsers = await usersModel.find({ companyName: company.companyName }).sort({ createdAt: -1 }).limit(10);
 
-		return {
-			success: true,
-			message: "Company dashboard data fetched successfully",
-			data: {
-				// company,
-				transactions: companyTransactions,
-				recentUsers,
-			},
-			statusCode: httpStatusCode.OK,
-		};
-	} catch (error) {
-		console.error("Error in getCompanyDashboardService:", error);
-		return errorResponseHandler("Failed to fetch company dashboard data", httpStatusCode.INTERNAL_SERVER_ERROR, res);
-	}
+// 		return {
+// 			success: true,
+// 			message: "Company dashboard data fetched successfully",
+// 			data: {
+// 				// company,
+// 				transactions: companyTransactions,
+// 				recentUsers,
+// 			},
+// 			statusCode: httpStatusCode.OK,
+// 		};
+// 	} catch (error) {
+// 		console.error("Error in getCompanyDashboardService:", error);
+// 		return errorResponseHandler("Failed to fetch company dashboard data", httpStatusCode.INTERNAL_SERVER_ERROR, res);
+// 	}
+// };
+
+export const getCompanyDashboardService = async (id: any, payload: any, res: Response) => {
+    try {
+        const company = await companyModels.findById(id);
+        if (!company) {
+            return errorResponseHandler("Company not found", httpStatusCode.NOT_FOUND, res);
+        }
+
+        const companyCustomerId = company.stripeCustomerId;
+        if (!companyCustomerId) {
+            return errorResponseHandler("Stripe customer ID not found for the company", httpStatusCode.BAD_REQUEST, res);
+        }
+
+        // Fetch transactions using the Stripe customer ID
+        const companyTransactions = await getSubscriptionsByCustomer(companyCustomerId);
+
+        // Pagination for recent users
+        const page = parseInt(payload.page as string) || 1;
+        const limit = parseInt(payload.limit as string) || 10;
+        const skip = (page - 1) * limit;
+
+        const recentUsers = await usersModel
+            .find({ companyName: company.companyName })
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit);
+
+        const totalUsers = await usersModel.countDocuments({ companyName: company.companyName });
+
+        return {
+            success: true,
+            message: "Company dashboard data fetched successfully",
+            data: {
+                transactions: companyTransactions,
+                recentUsers,
+                pagination: {
+                    totalUsers,
+                    page,
+                    limit,
+                },
+            },
+            statusCode: httpStatusCode.OK,
+        };
+    } catch (error) {
+        console.error("Error in getCompanyDashboardService:", error);
+        return errorResponseHandler("Failed to fetch company dashboard data", httpStatusCode.INTERNAL_SERVER_ERROR, res);
+    }
 };
 
 // Explicitly define the params type to include 'customer'
