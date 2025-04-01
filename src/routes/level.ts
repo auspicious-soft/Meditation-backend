@@ -5,6 +5,6 @@ const router = Router();
 
 
 router.get("/", getAllLevels);
-router.route("/:id").get(getLevelById).put( updateLevel);
+router.route("/:id").get(getLevelById);
 
 export {router}

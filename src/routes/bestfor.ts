@@ -5,6 +5,6 @@ const router = Router()
 
 
 router.get("/", getAllBestFor);
-router.route("/:id").get(getBestForById).put(updateBestFor)
+router.route("/:id").get(getBestForById)
 
 export { router}
