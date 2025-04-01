@@ -289,8 +289,8 @@ export const resendOtpService = async (email: string, res: Response) => {
 	};
 };
 
-export const getUserInfoService = async (id: string, res: Response) => {
-	const user = await usersModel.findById(id);
+export const getUserInfoService = async (userData: any, res: Response) => {
+	const user = await usersModel.findById(userData.id);
 	if (!user) return errorResponseHandler("User not found", httpStatusCode.NOT_FOUND, res);
 	return {
 		success: true,

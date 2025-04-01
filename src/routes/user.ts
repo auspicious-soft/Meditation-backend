@@ -5,6 +5,7 @@ import {
   getDashboardStats,
   getUserInfo,
   editUserInfo,
+  getCurrentUserInfoHandler,
   getAllUsers,
   verifyEmail,
   getHomePage,
@@ -27,7 +28,8 @@ router.patch("/email/verify", verifyEmail);
 
 router.get("/dashboard", checkAuth, getDashboardStats);
 router.post("/audio-history",checkAuth, UserAudioHistory);
-router.route("/:id").all(checkAuth).get(getUserInfo).put(editUserInfo);
+router.route("/user-info").all(checkAuth).get(getCurrentUserInfoHandler).put(updateUserDetails);
+// router.get("/", checkAuth, );
 
 //HOME PAGE
 router.post("/home",checkAuth, getHomePage);

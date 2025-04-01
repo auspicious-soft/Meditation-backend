@@ -106,7 +106,7 @@ export const deleteCompanyById = async (req: Request, res: Response) => {
 }
 export const getCompanyDashboard = async (req: Request, res: Response) => {
   try {
-    const response = await getCompanyDashboardService(req?.currentUser, res);
+    const response = await getCompanyDashboardService(req.currentUser, res);
     return res.status(response.statusCode).json(response);
   } catch (error: any) {
     const { code, message } = errorParser(error);
