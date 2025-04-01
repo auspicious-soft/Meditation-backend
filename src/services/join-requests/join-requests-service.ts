@@ -64,11 +64,11 @@ export const getJoinRequestByIdService = async (companyDetails: any,payload: any
             hasPrevPage: page > 1
         };
 
-        return res.status(httpStatusCode.OK).json({ 
+        return { 
             success: true, 
             data: joinRequests,
             pagination 
-        });
+        };
     
 };
 export const getAllJoinRequestsService = async (id: string, res: Response) => {
