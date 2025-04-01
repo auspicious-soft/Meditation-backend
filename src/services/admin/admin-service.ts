@@ -318,7 +318,6 @@ export const AnalyticsService = async ( res: Response) => {
         totalDownload,
         totalAudioPlays,
         newUser,
-
         subscriptionExpireToday,
         paymentToday
 

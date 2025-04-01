@@ -37,7 +37,7 @@ export const getCompanyJoinRequestByIdService = async (id: string, res: Response
 	}
 };
 export const getAllCompanyJoinRequestsService = async (res: Response) => {
-	const joinRequest = await companyJoinRequestsModel.find().populate("companyId").select("_id companyId status email identifier");
+	const joinRequest = await companyJoinRequestsModel.find({status:"Pending"}).populate("companyId").select("_id companyId status email identifier");
 	if (!joinRequest) return errorResponseHandler("Join request not found", httpStatusCode.NOT_FOUND, res);
 
 	return { success: true, data: joinRequest };
