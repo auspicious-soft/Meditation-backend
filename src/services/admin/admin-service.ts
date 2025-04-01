@@ -292,7 +292,7 @@ export const getDashboardStatsService = async (payload: any, res: Response) => {
 export const AnalyticsService = async ( res: Response) => {
   const totalUser = await usersModel.countDocuments();
   const activeUsers = await usersModel.countDocuments({isAccountActive: true});
-  const newUser = await usersModel.countDocuments({createdAt: { $gte: new Date(new Date().setDate(new Date().getDate() - 7)) }});
+  const newUser = await usersModel.find({createdAt: { $gte: new Date(new Date().setDate(new Date().getDate() - 7)) }}).limit(10);
   const totalDownload = 0;
   const totalAudioPlays = 0;
   const allSubscription = await getAllSubscriptions()
@@ -318,6 +318,7 @@ export const AnalyticsService = async ( res: Response) => {
         totalDownload,
         totalAudioPlays,
         newUser,
+
         subscriptionExpireToday,
         paymentToday
 
