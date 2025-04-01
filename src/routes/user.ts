@@ -32,7 +32,7 @@ router.route("/user-info").all(checkAuth).get(getCurrentUserInfoHandler).put(upd
 // router.get("/", checkAuth, );
 
 //HOME PAGE
-router.post("/home",checkAuth, getHomePage);
+router.get("/home",checkAuth, getHomePage);
 
 //SEARCH Routes
 router.get("/search/audio",checkAuth, searchAudios);

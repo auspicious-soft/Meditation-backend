@@ -535,89 +535,213 @@ export const getDashboardStatsService = async (payload: any, res: Response) => {
 	// return response
 };
 
-export const getHomePageService = async (payload: any, res: Response) => {
-	//TODO: SUGGESTED COLLECTION ACCORDING TO THE SEARCH OF USER
-	const suggestedCollection = await collectionModel.find().limit(1);
-	if (!suggestedCollection) return errorResponseHandler("User not found", httpStatusCode.NOT_FOUND, res);
+// export const getHomePageService = async (payload: any, res: Response) => {
+// 	//TODO: SUGGESTED COLLECTION ACCORDING TO THE SEARCH OF USER
+// 	const suggestedCollection = await collectionModel.find().limit(1);
+// 	if (!suggestedCollection) return errorResponseHandler("User not found", httpStatusCode.NOT_FOUND, res);
     
-	const trendingAudio = await userAudioHistoryModel.aggregate([
-		{
-			$group: {
-				_id: "$audio_id", // Ensure this field exists in userAudioHistoryModel
-				count: { $sum: 1 },
-			},
-		},
-		{
-			$sort: { count: -1 },
-		},
-		{
-			$limit: 5,
-		},
-		{
-			$lookup: {
-				from: "audios", // Ensure the collection name is correct
-				localField: "_id", // Ensure this matches the field in userAudioHistoryModel
-				foreignField: "_id", // Ensure this matches the field in the audios collection
-				as: "audioDetails",
-			},
-		},
-		{
-			$unwind: {
-				path: "$audioDetails",
-				preserveNullAndEmptyArrays: false, // Exclude unmatched documents
-			},
-		},
-	]);
+// 	const trendingAudio = await userAudioHistoryModel.aggregate([
+// 		{
+// 			$group: {
+// 				_id: "$audio_id", // Ensure this field exists in userAudioHistoryModel
+// 				count: { $sum: 1 },
+// 			},
+// 		},
+// 		{
+// 			$sort: { count: -1 },
+// 		},
+// 		{
+// 			$limit: 5,
+// 		},
+// 		{
+// 			$lookup: {
+// 				from: "audios", // Ensure the collection name is correct
+// 				localField: "_id", // Ensure this matches the field in userAudioHistoryModel
+// 				foreignField: "_id", // Ensure this matches the field in the audios collection
+// 				as: "audioDetails",
+// 			},
+// 		},
+// 		{
+// 			$unwind: {
+// 				path: "$audioDetails",
+// 				preserveNullAndEmptyArrays: false, // Exclude unmatched documents
+// 			},
+// 		},
+// 	]);
 
-	const collection = await collectionModel.find();
+// 	const collection = await collectionModel.find();
 	
-	const meditationType = await bestForModel.aggregate([
-		{
-			$lookup: {
-				from: "collections", // Ensure the collection name is correct
-				localField: "_id", // Ensure this matches the field in bestForModel
-				foreignField: "bestFor", // Ensure this matches the field in the collections collection
-				as: "collections",
-			},
-		},
-		{
-			$unwind: {
-				path: "$collections",
-				preserveNullAndEmptyArrays: false, // Exclude unmatched documents
-			},
-		},
-		{
-			$lookup: {
-				from: "audios", // Ensure the collection name is correct
-				localField: "collections._id", // Ensure this matches the field in collections
-				foreignField: "collectionType", // Ensure this matches the field in the audios collection
-				as: "audios",
-			},
-		},
-		{
-			$group: {
-				_id: "$_id",
-				name: { $first: "$name" },
-				audioCount: { $sum: { $size: "$audios" } },
-			},
-		},
-	]);
-	const bestForType = await bestForModel.find({ name: "Breathing" });
-	const breathing = await AudioModel.find()
-		.populate({
-			path: "collectionType",
-			match: { bestFor: new mongoose.Types.ObjectId(bestForType[0]._id) }, // Ensure 'breathing' is replaced with the correct ID
-		})
-		.exec();
-	return {
-		success: true,
-		message: `Home page fetched successfully`,
-		data: {
-			suggestedCollection,
-			trendingAudio,
-			collection,
-			breathing,
-			meditationType,
-		},
-	};
+// 	const meditationType = await bestForModel.aggregate([
+// 		{
+// 			$lookup: {
+// 				from: "collections", // Ensure the collection name is correct
+// 				localField: "_id", // Ensure this matches the field in bestForModel
+// 				foreignField: "bestFor", // Ensure this matches the field in the collections collection
+// 				as: "collections",
+// 			},
+// 		},
+// 		{
+// 			$unwind: {
+// 				path: "$collections",
+// 				preserveNullAndEmptyArrays: false, // Exclude unmatched documents
+// 			},
+// 		},
+// 		{
+// 			$lookup: {
+// 				from: "audios", // Ensure the collection name is correct
+// 				localField: "collections._id", // Ensure this matches the field in collections
+// 				foreignField: "collectionType", // Ensure this matches the field in the audios collection
+// 				as: "audios",
+// 			},
+// 		},
+// 		{
+// 			$group: {
+// 				_id: "$_id",
+// 				name: { $first: "$name" },
+// 				audioCount: { $sum: { $size: "$audios" } },
+// 			},
+// 		},
+// 	]);
+// 	const bestForType = await bestForModel.find({ name: "Breathing" });
+// 	const breathing = await AudioModel.find()
+// 		.populate({
+// 			path: "collectionType",
+// 			match: { bestFor: new mongoose.Types.ObjectId(bestForType[0]._id) }, // Ensure 'breathing' is replaced with the correct ID
+// 		})
+// 		.exec();
+// 	return {
+// 		success: true,
+// 		message: `Home page fetched successfully`,
+// 		data: {
+// 			suggestedCollection,
+// 			trendingAudio,
+// 			collection,
+// 			breathing,
+// 			meditationType,
+// 		},
+// 	};
+// };
+
+
+export const getHomePageService = async (payload: any, res: Response) => {
+    // Suggested Collection with population
+    const suggestedCollection = await collectionModel
+        .find()
+        .limit(1)
+        .populate('bestFor')  // Populate bestFor
+        .populate('levels');  // Populate levels
+    if (!suggestedCollection) return errorResponseHandler("User not found", httpStatusCode.NOT_FOUND, res);
+    
+    // Trending Audio with population
+    const trendingAudio = await userAudioHistoryModel.aggregate([
+        {
+            $group: {
+                _id: "$audio_id",
+                count: { $sum: 1 },
+            },
+        },
+        {
+            $sort: { count: -1 },
+        },
+        {
+            $limit: 5,
+        },
+        {
+            $lookup: {
+                from: "audios",
+                localField: "_id",
+                foreignField: "_id",
+                as: "audioDetails",
+            },
+        },
+        {
+            $unwind: {
+                path: "$audioDetails",
+                preserveNullAndEmptyArrays: false,
+            },
+        },
+        {
+            $lookup: {
+                from: "bestfors",  // Assuming this is the collection name for bestFor
+                localField: "audioDetails.bestFor",
+                foreignField: "_id",
+                as: "audioDetails.bestFor",
+            },
+        },
+        {
+            $lookup: {
+                from: "levels",  // Assuming this is the collection name for levels
+                localField: "audioDetails.levels",
+                foreignField: "_id",
+                as: "audioDetails.levels",
+            },
+        },
+    ]);
+
+    // Collection with population
+    const collection = await collectionModel
+        .find()
+        .populate('bestFor')
+        .populate('levels');
+    
+    const meditationType = await bestForModel.aggregate([
+        {
+            $lookup: {
+                from: "collections",
+                localField: "_id",
+                foreignField: "bestFor",
+                as: "collections",
+            },
+        },
+        {
+            $unwind: {
+                path: "$collections",
+                preserveNullAndEmptyArrays: false,
+            },
+        },
+        {
+            $lookup: {
+                from: "audios",
+                localField: "collections._id",
+                foreignField: "collectionType",
+                as: "audios",
+            },
+        },
+        {
+            $group: {
+                _id: "$_id",
+                name: { $first: "$name" },
+                audioCount: { $sum: { $size: "$audios" } },
+            },
+        },
+    ]);
+
+    const bestForType = await bestForModel.find({ name: "Breathing" });
+
+    // Breathing with population
+    const breathing = await AudioModel
+        .find()
+        .populate({
+            path: "collectionType",
+            match: { bestFor: new mongoose.Types.ObjectId(bestForType[0]._id) },
+            populate: [
+                { path: 'bestFor' },
+                { path: 'levels' }
+            ]
+        })
+        .populate('bestFor')
+        .populate('levels')
+        .exec();
+
+    return {
+        success: true,
+        message: `Home page fetched successfully`,
+        data: {
+            suggestedCollection,
+            trendingAudio,
+            collection,
+            breathing,
+            meditationType,
+        },
+    };
 };
