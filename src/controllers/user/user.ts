@@ -231,4 +231,13 @@ export const resendOtp = async (req: Request, res: Response) => {
 		const { code, message } = errorParser(error);
 		return res.status(code || httpStatusCode.INTERNAL_SERVER_ERROR).json({ success: false, message: message || "An error occurred" });
 	}
-};
+};export const getAllBlockedUser =async(req:Request, res:Response)=>{
+    try {
+        const response = await getBlockedUserService( req.body.email, res); 
+        return res.status(httpStatusCode.OK).json(response);
+    } catch (error: any) {
+        const { code, message } = errorParser(error);
+        return res.status(code || httpStatusCode.INTERNAL_SERVER_ERROR).json({ success: false, message: message || "An error occurred" });
+    }
+} 
+

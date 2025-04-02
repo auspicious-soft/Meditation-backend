@@ -261,6 +261,54 @@ export const editUserInfoService = async (id: string, payload: any, res: Respons
 		data: updateduser,
 	};
 };
+export const getBlockedUserService=async(req: Request, res: Response)=>{
+	// Extract page and limit from query parameters, with defaults
+	const page = parseInt((req.query.page as string) || '1', 10);
+	const limit = parseInt((req.query.limit as string) || '10', 10);
+
+	// Validate page and limit
+	if (page < 1 || limit < 1) {
+		return res.status(400).json({
+			success: false,
+			message: 'Page and limit must be positive integers',
+		});
+	}
+
+	// Calculate skip value for pagination
+	const skip = (page - 1) * limit;
+
+	// Query for blocked users with pagination
+	const blockedUsers = await usersModel
+		.find({ isBlocked: true })
+		.skip(skip)
+		.limit(limit)
+		.select('-password') // Exclude password field from response
+		.lean(); // Convert to plain JavaScript objects
+
+	// Get total count of blocked users for pagination metadata
+	const totalBlockedUsers = await usersModel.countDocuments({ isBlocked: true });
+
+	// Calculate total pages
+	const totalPages = Math.ceil(totalBlockedUsers / limit);
+
+	// Prepare response
+	return {
+		success: true,
+		message: 'Blocked users retrieved successfully',
+		data: {
+			users: blockedUsers,
+			pagination: {
+				currentPage: page,
+				limit,
+				totalUsers: totalBlockedUsers,
+				totalPages,
+				hasNextPage: page < totalPages,
+				hasPreviousPage: page > 1,
+			},
+		},
+	};
+}
+
 export const updateUserDetailsService = async (user: any,payload: any, res: Response) => {
 	const id = user?.id ?? null;
 	if (!id) return errorResponseHandler("User not authenticated", httpStatusCode.UNAUTHORIZED, res);
