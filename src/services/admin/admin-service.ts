@@ -220,6 +220,11 @@ export const updateAUserService = async (
   payload: any,
   res: Response
 ) => {
+  if(!payload) return errorResponseHandler(
+    "No data provided to update",
+    httpStatusCode.BAD_REQUEST,
+    res
+  )
   const user = await usersModel.findById(id);
   if (!user)
     return errorResponseHandler(
@@ -227,8 +232,6 @@ export const updateAUserService = async (
       httpStatusCode.NOT_FOUND,
       res
     );
-  const countryCode = "+45";
-  payload.phoneNumber = `${countryCode}${payload.phoneNumber}`;
   const updateduser = await usersModel.findByIdAndUpdate(
     id,
     { ...payload },

@@ -26,16 +26,46 @@ export const getAllFAQsService = async (res: Response) => {
 };
 
 // Get Single FAQ
-export const getAllFAQService = async ( res: Response) => {
-    try {
-        const faq = await faqsModel.find();
-        if (!faq) return errorResponseHandler("FAQ not found", httpStatusCode.NOT_FOUND, res);
-        return { success: true, message: "FAQs fetched successfully", data: faq };
-    } catch (error) {
-        console.error('Error in getFAQByIdService:', error);
-        throw error;
-    }
+export const getAllFAQService = async (res: Response,page: number = 1,limit: number = 10) => {
+   // Convert page and limit to integers and ensure they are positive
+   const currentPage = Math.max(1, parseInt(page.toString(), 10));
+   const itemsPerPage = Math.max(1, parseInt(limit.toString(), 10));
+
+   // Calculate skip value for pagination
+   const skip = (currentPage - 1) * itemsPerPage;
+
+   // Fetch FAQs with pagination
+   const faqs = await faqsModel
+     .find()
+     .skip(skip)
+     .limit(itemsPerPage)
+     .exec();
+
+   // If no FAQs are found, return an error response
+   if (!faqs || faqs.length === 0) {
+     return errorResponseHandler("FAQ not found", httpStatusCode.NOT_FOUND, res);
+   }
+
+   // Get total count of FAQs for pagination metadata
+   const totalItems = await faqsModel.countDocuments();
+
+   // Calculate total pages
+   const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+   // Return success response with pagination metadata
+   return {
+     success: true,
+     message: "FAQs fetched successfully",
+     data: faqs,
+     pagination: {
+       currentPage,
+       totalPages,
+       totalItems,
+       limit: itemsPerPage,
+     },
+   };
 };
+
 export const getFAQByIdService = async (id: string, res: Response) => {
     try {
         const faq = await faqsModel.findById(id);
