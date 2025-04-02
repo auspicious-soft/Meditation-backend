@@ -1,5 +1,5 @@
 import { Router } from "express";
-import {  deleteAUser, forgotPassword, getAllUsers, getAnalytics, getAUserById, getDashboardStats,  login,  newPassswordAfterOTPVerified,} from "../controllers/admin/admin";
+import {  deleteAUser, forgotPassword, getAllUsers, getAnalytics, getAUserById, getDashboardStats,  login,  newPassswordAfterOTPVerified, updateAUser,} from "../controllers/admin/admin";
 // import { checkAdminAuth } from "../middleware/check-auth";
 import { upload } from "../configF/multer";
 import { checkMulter } from "../lib/errors/error-response-handler"
@@ -29,11 +29,12 @@ router.get("/user/:id",getAUserById)
 router.get("/get-all-companies", getAllCompanies);
 router.put("/update/collection/:id", updateCollection);
 router.put("/update/audio/:id",updateAudio)
+router.put("/user/update/:id",updateAUser)
 router.patch("/level/:id",updateLevel)
 router.patch("/bestfor/:id",updateBestFor)
 router.delete("/delete-collection/:id",deleteCollection)
 router.delete("/delete-company/:id", deleteCompanyById);
-router.delete("/delete-user/:id", deleteAUser);
+router.delete("/user/delete-user/:id", deleteAUser);
 router.delete("/delete-audio/:id", deleteAudio);
 router.delete("/delete-bestfor/:id",deleteBestFor);
 router.delete("/delete-level/:id",deleteLevel)
