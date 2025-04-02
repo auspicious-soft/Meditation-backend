@@ -116,6 +116,7 @@ export const getCompanyDashboard = async (req: Request, res: Response) => {
     });
   }
 }
+ 
 export const searchCollections = async (req: Request, res: Response) => {
   try {
     const response = await searchCollectionsService(req, res);
