@@ -269,10 +269,7 @@ export const getBlockedUserService=async(req: Request, res: Response)=>{
 
 	// Validate page and limit
 	if (page < 1 || limit < 1) {
-		return res.status(400).json({
-			success: false,
-			message: 'Page and limit must be positive integers',
-		});
+		errorResponseHandler("Page and limit must be positive integers", httpStatusCode.FORBIDDEN, res)
 	}
 
 	// Calculate skip value for pagination
