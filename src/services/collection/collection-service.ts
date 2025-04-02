@@ -547,3 +547,4 @@ export const searchCollectionsService = async (req: any, res: Response) => {
   };
 
 }
+

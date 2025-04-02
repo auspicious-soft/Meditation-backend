@@ -14,7 +14,9 @@ import { createCompanyJoinRequestService } from "../company-join-requests/compan
 import { getPasswordResetTokenByToken } from "src/utils/mails/token";
 import { passwordResetTokenModel } from "src/models/password-token-schema";
 import Stripe from "stripe";
-
+interface BlockRequestBody {
+  isBlocked: boolean;
+}
 const schemas = [adminModel, usersModel, companyModels]; // Add all schemas to the array
 
 export const companySignupService = async (payload: any, req: any, res: Response) => {
@@ -103,7 +105,9 @@ export const verifyCompanyEmailService = async (req: any, res: Response) => {
 
 	// Prepare the response
 	const companyData = company.toObject() as any;
-	delete companyData.password;
+	  if (companyData.password) {
+		  delete companyData?.password;
+	  }
 
 	return {
 		success: true,
@@ -255,6 +259,27 @@ export const getCompanyByIdService = async (user: any, res: Response) => {
 		statusCode: httpStatusCode.OK,
 	};
 };
+export const getCompanyByIdForAdminService = async (req: any, res: Response) => {
+	const companyId = req.params.id;
+
+    // Validate the ID (optional but recommended)
+    if (!companyId) {
+      return errorResponseHandler("Company ID is required", httpStatusCode.BAD_REQUEST, res);
+    }
+	const company = await companyModels.findById(companyId);
+	if (!company) {
+		return errorResponseHandler("Company not found", httpStatusCode.NOT_FOUND, res);
+	}
+
+	const companyData = company.toObject() as any;
+	delete companyData.password;
+
+	return {
+		success: true,
+		data: companyData,
+		statusCode: httpStatusCode.OK,
+	};
+};
 
 export const deleteCompanyService = async (id: string, res: Response) => {
 	const company = await companyModels.findByIdAndDelete(id);
@@ -268,6 +293,52 @@ export const deleteCompanyService = async (id: string, res: Response) => {
 		statusCode: httpStatusCode.OK,
 	};
 };
+export const toggleBlockedCompanyService = async (req: any, res: Response) => {
+  // Extract company ID from URL parameters
+  const { id } = req.params;
+
+  // Validate ID
+  if (!id) {
+    return errorResponseHandler("Company ID is required", httpStatusCode.BAD_REQUEST, res);
+  }
+
+  // Extract isBlocked from request body
+  const body = req.body as unknown;
+  const { isBlocked } = body as BlockRequestBody;
+
+  // Validate request body
+  if (typeof isBlocked !== "boolean") {
+    return errorResponseHandler(
+      "isBlocked must be a boolean value",
+      httpStatusCode.BAD_REQUEST,
+      res
+    );
+  }
+
+  // Find and update the company
+  const company = await companyModels.findByIdAndUpdate(
+    id,
+    { isBlocked },
+    { new: true, runValidators: true } // Return updated document and validate schema
+  );
+
+  // Check if company exists
+  if (!company) {
+    return errorResponseHandler("Company not found", httpStatusCode.NOT_FOUND, res);
+  }
+
+  // Prepare response data (excluding password)
+  const companyData = company.toObject() as any;
+  delete companyData.password;
+
+  // Return success response
+  return {
+    success: true,
+    data: companyData,
+    message: `Company ${isBlocked ? "blocked" : "unblocked"} successfully`,
+    statusCode: httpStatusCode.OK,
+  };
+}
 
 // export const getCompanyDashboardService = async (id: any, res: Response) => {
 // 	try {
