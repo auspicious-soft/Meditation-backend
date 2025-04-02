@@ -261,6 +261,7 @@ export const editUserInfoService = async (id: string, payload: any, res: Respons
 		data: updateduser,
 	};
 };
+
 export const getBlockedUserService=async(req: Request, res: Response)=>{
 	// Extract page and limit from query parameters, with defaults
 	const page = parseInt((req.query.page as string) || '1', 10);
