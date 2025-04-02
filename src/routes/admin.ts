@@ -3,7 +3,7 @@ import {  deleteAUser, forgotPassword, getAllUsers, getAnalytics, getAUserById, 
 // import { checkAdminAuth } from "../middleware/check-auth";
 import { upload } from "../configF/multer";
 import { checkMulter } from "../lib/errors/error-response-handler"
-import { verifyOtpPasswordReset } from "src/controllers/user/user";
+import { getAllBlockedUser, verifyOtpPasswordReset } from "src/controllers/user/user";
 import { checkAuth } from "src/middleware/check-auth";
 import { createCollection, deleteCollection, updateCollection } from "src/controllers/collection/collection-controller";
 import { deleteAudio, searchAudios, updateAudio, uploadAudio } from "src/controllers/audio/audio-controller";
@@ -23,6 +23,7 @@ router.post("/create-company", createCompany);
 router.post("/create-bestfor",createBestFor)
 router.post("/create-level", createLevel);
 router.get("/get-all-users", getAllUsers);
+router.get("/users/blocked", getAllBlockedUser);
 router.get("/dashboard", getDashboardStats)
 router.get("/user/:id",getAUserById)
 router.get("/get-all-companies", getAllCompanies);
