@@ -58,6 +58,7 @@ export const updateCompanyJoinRequestService = async (id: string, payload: any, 
 		const EmailVerificationToken = await generatePasswordResetToken(companyData.email);
 		if (EmailVerificationToken) {
 			await sendUserVerificationEmail(companyData.email, EmailVerificationToken.token);
+			console.log('companyData.email: ', companyData.email);
 		} else {
 			return errorResponseHandler("Failed to send email verification", httpStatusCode.INTERNAL_SERVER_ERROR, res);
 		}

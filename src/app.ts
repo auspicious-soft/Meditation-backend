@@ -62,7 +62,7 @@ app.use('/api/level', level);
 app.use('/api/bestfor', bestfor);
 app.use("/api/audio", audio);
 app.post("/api/forgot-password", forgotPassword);
-app.post("/api/verify-otp", verifyOtpPasswordReset)
+app.post("/api/verify-otp", verifyOtpPasswordReset);
 app.patch("/api/otp-new-password-verification", newPassswordAfterOTPVerified);
 app.post('/api/company/webhook', express.raw({ type: 'application/json' }), afterSubscriptionCreated)
 app.get('/api/company/webhook', (req, res) => {

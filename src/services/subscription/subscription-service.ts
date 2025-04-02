@@ -43,7 +43,6 @@ const goldProductId = process.env.STRIPE_PRODUCT_GOLD_PLAN;
 
 
   export const getAllProductsForCompanyService = async (company: any, filter?: string) => {
-	console.log('filter: ', filter);
 	const companyId = company.currentUser;
   
 	try {
@@ -69,7 +68,7 @@ const goldProductId = process.env.STRIPE_PRODUCT_GOLD_PLAN;
   
 	  for await (const product of stripeProducts) {
 		productCount++;
-		console.log(`Processing product ${productCount}:`, product.id);
+		// console.log(`Processing product ${productCount}:`, product.id);
   
 		// Fetch associated prices for each product
 		const prices = await stripe.prices.list({
@@ -138,7 +137,7 @@ const goldProductId = process.env.STRIPE_PRODUCT_GOLD_PLAN;
 		products: products,
 	  };
 	} catch (error) {
-	  console.error("Error fetching products:", error);
+	//   console.error("Error fetching products:", error);
 	  throw new Error(`Failed to fetch products: ${(error as Error).message}`);
 	}
   };
@@ -168,7 +167,7 @@ export const getAllProductsService = async (filter?: string) => {
 
         for await (const product of stripeProducts) {
             productCount++;
-            console.log(`Processing product ${productCount}:`, product.id);
+            // console.log(`Processing product ${productCount}:`, product.id);
 
             // Fetch associated prices for each product
             const prices = await stripe.prices.list({
@@ -210,7 +209,7 @@ export const getAllProductsService = async (filter?: string) => {
 
 
 export const updatePricesService = async (data: PriceUpdateRequest)=> {
-	console.log('data: ', data);
+	// console.log('data: ', data);
 	try {
 		// Validate environment variables for product IDs
 		if (!silverProductId || !bronzeProductId || !goldProductId) {
@@ -552,6 +551,8 @@ export async function subscriptionExpireRemainderService(id: string, res: Respon
 // }
 
 export const createSubscriptionService = async (company: any, payload: any, res: Response) => {
+	console.log('payload: ', payload);
+	console.log('company: ', company);
     const idempotencyKey = uuidv4()
     const userId = company.id
     const { planType, interval = 'month', email, name }: { 

@@ -44,16 +44,26 @@ export const sendUserSignupEmail = async (email: string, firstName: string) => {
 }
 
 export const sendUserVerificationEmail = async (email: string, verificationCode: string) => {
-  return await resend.emails.send({
-    from: process.env.COMPANY_RESEND_GMAIL_ACCOUNT as string,
-    to: email,
-    subject: "Verify your email address",
-    html: `
-      <h3>Verify your email address</h3>
-      <p>Please verify your email address by entering the following verification code: ${verificationCode}</p>
+  try {
+    console.log("Sending verification email with payload:", {
+      email,
+      verificationCode,
+    });
+    return await resend.emails.send({
+      from: process.env.COMPANY_RESEND_GMAIL_ACCOUNT as string,
+      to: email,
+      subject: "Verify your email address",
+      html: `
+        <h3>Verify your email address</h3>
+        <p>Please verify your email address by entering the following verification code: ${verificationCode}</p>
+  
+      `,
+    });
+  } catch (error) {
+    console.error("Error sending verification email:", error);
+    throw new Error("Failed to send verification email.");
+  }
 
-    `,
-  });
 }
 
 
