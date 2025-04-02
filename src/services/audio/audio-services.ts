@@ -127,7 +127,8 @@ export const getAudioByIdService = async (req: Request, res: Response) => {
     const { id } = req.params;
     const audio = await AudioModel.findById(id).populate("collectionType")
     .populate("levels")
-    .populate("bestFor");
+    .populate("bestFor")
+    .populate("collectionType");
     if (!audio) {
       return errorResponseHandler("Audio not found", httpStatusCode.NOT_FOUND, res);
     }

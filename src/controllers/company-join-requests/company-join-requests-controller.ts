@@ -18,7 +18,7 @@ export const createCompanyJoinRequest = async (req: any, res: Response) => {
 // Get a single join request by ID
 export const getCompanyJoinRequestById = async (req: Request, res: Response) => {
 	try {
-		const response = await getCompanyJoinRequestByIdService(req.params.id, res);
+		const response = await getCompanyJoinRequestByIdService(req, res);
 		return res.status(httpStatusCode.OK).json(response);
 	} catch (error: any) {
 		const { code, message } = errorParser(error);

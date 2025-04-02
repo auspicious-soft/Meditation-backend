@@ -24,11 +24,10 @@ export const createCompanyJoinRequestService = async (payload: any) => {
 	const newJoinRequest = await companyJoinRequestsModel.create(payload);
 };
 
-export const getCompanyJoinRequestByIdService = async (id: string, res: Response) => {
+export const getCompanyJoinRequestByIdService = async (req: any, res: Response) => {
 	try {
-		// TODO: take the company id from token
-		const joinRequest = await companyJoinRequestsModel.find().populate("companyId");
-		if (!joinRequest) return errorResponseHandler("Join request not found", httpStatusCode.NOT_FOUND, res);
+		const joinRequest = await companyJoinRequestsModel.find({ companyId: req.currentUser ,status:"Pending"}).populate("companyId");
+		// if (!joinRequest) return errorResponseHandler("Join request not found", httpStatusCode.NOT_FOUND, res);
 
 		return res.status(httpStatusCode.OK).json({ success: true, data: joinRequest });
 	} catch (error) {
@@ -44,7 +43,6 @@ export const getAllCompanyJoinRequestsService = async (res: Response) => {
 };
   
 export const updateCompanyJoinRequestService = async (id: string, payload: any, res: Response) => {
-	console.log('id: ', id);
 	
 	const joinRequest = await companyJoinRequestsModel.find({ companyId: id });
 	const companyData = await companyModels.findById(id);

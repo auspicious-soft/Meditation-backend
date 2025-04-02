@@ -50,9 +50,9 @@ export const getJoinRequestByIdService = async (companyDetails: any,payload: any
             .skip(skip)
             .limit(limit);
 
-        if (!joinRequests || joinRequests.length === 0) {
-            return errorResponseHandler("Join requests not found", httpStatusCode.NOT_FOUND, res);
-        }
+        // if (!joinRequests || joinRequests.length === 0) {
+        //     return errorResponseHandler("Join requests not found", httpStatusCode.NOT_FOUND, res);
+        // }
 
         // Prepare pagination metadata
         const pagination = {

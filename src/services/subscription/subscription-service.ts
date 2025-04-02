@@ -42,8 +42,108 @@ const bronzeProductId = process.env.STRIPE_PRODUCT_BRONZE_PLAN;
 const goldProductId = process.env.STRIPE_PRODUCT_GOLD_PLAN;
 
 
-export const getAllProductsService = async (filter?: string) => {
+  export const getAllProductsForCompanyService = async (company: any, filter?: string) => {
 	console.log('filter: ', filter);
+	const companyId = company.currentUser;
+  
+	try {
+	  const products: any[] = [];
+  
+	  // Determine the active status based on the filter query
+	  let activeFilter: boolean | undefined;
+	  if (filter === "active") {
+		activeFilter = true;
+	  } else if (filter === "archived") {
+		activeFilter = false;
+	  } else if (filter && filter !== "all") {
+		throw new Error("Invalid filter value. Use 'active', 'archived', or 'all'.");
+	  }
+  
+	  // Fetch products from Stripe with the specified filter
+	  const stripeProducts = stripe.products.list({
+		limit: 100,
+		active: activeFilter, // undefined fetches both active and inactive
+	  });
+  
+	  let productCount = 0;
+  
+	  for await (const product of stripeProducts) {
+		productCount++;
+		console.log(`Processing product ${productCount}:`, product.id);
+  
+		// Fetch associated prices for each product
+		const prices = await stripe.prices.list({
+		  product: product.id,
+		  limit: 10, // Limit prices per product
+		});
+  
+		products.push({
+		  id: product.id,
+		  name: product.name,
+		  description: product.description || undefined,
+		  active: product.active,
+		  created: timestampToDateString(product.created),
+		  updated: product.updated ? timestampToDateString(product.updated) : undefined,
+		  metadata: product.metadata,
+		  prices: prices.data.map(price => ({
+			id: price.id,
+			active: price.active,
+			unit_amount: price.unit_amount || 0,
+			currency: price.currency,
+			recurring: price.recurring
+			  ? {
+				  interval: price.recurring.interval,
+				  interval_count: price.recurring.interval_count,
+				}
+			  : undefined,
+		  })),
+		});
+	  }
+  
+	  // If companyId is provided, fetch company details and add currentPlan to the matching product
+	  if (companyId) {
+		const companyDetails = await companyModels.findById(companyId);
+  
+		if (!companyDetails) {
+		  throw new Error("Company not found");
+		}
+  
+		const companyPlanType = companyDetails.planType; // e.g., "goldPlan"
+		const subscriptionExpiryDate = companyDetails.subscriptionExpiryDate; // e.g., "2025-04-20T11:07:47.000Z"
+  
+		// Map planType to product name (e.g., "goldPlan" -> "Gold Plan")
+		const planTypeToProductName: { [key: string]: string } = {
+		  goldplan: "Gold Plan",
+		  silverplan: "Silver Plan",
+		  bronzeplan: "Bronze Plan",
+		};
+  
+		const expectedProductName = planTypeToProductName[companyPlanType?.toLowerCase()];
+  
+		// Find the product that matches the company's planType and add currentPlan to it
+		products.forEach((product: any) => {
+		  if (product.name === expectedProductName) {
+			product.currentPlan = {
+			  name: product.name,
+			  id: product.id,
+			  expiryDate: subscriptionExpiryDate,
+			};
+		  }
+		});
+	  }
+  
+	  return {
+		success: true,
+		count: products.length,
+		products: products,
+	  };
+	} catch (error) {
+	  console.error("Error fetching products:", error);
+	  throw new Error(`Failed to fetch products: ${(error as Error).message}`);
+	}
+  };
+
+export const getAllProductsService = async (filter?: string) => {
     try {
         const products: any[] = [];
         

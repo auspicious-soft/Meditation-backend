@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import mongoose from 'mongoose';
 import { httpStatusCode } from 'src/lib/constant';
 import { errorParser } from 'src/lib/errors/error-response-handler';
-import { afterSubscriptionCreatedService, cancelSubscriptionService, createSubscriptionService, getAllCouponsService, getAllProductsService, getAllSubscriptions, getPricesService, getSubscriptionById, subscriptionExpireInAWeekService, subscriptionExpireRemainderService, updatePricesService } from 'src/services/subscription/subscription-service';
+import { afterSubscriptionCreatedService, cancelSubscriptionService, createSubscriptionService, getAllCouponsService, getAllProductsForCompanyService, getAllProductsService, getAllSubscriptions, getPricesService, getSubscriptionById, subscriptionExpireInAWeekService, subscriptionExpireRemainderService, updatePricesService } from 'src/services/subscription/subscription-service';
 
 export const updatePrices = async (req: any, res: Response) => {
   try {
@@ -155,6 +155,17 @@ export const subscriptionExpireRemainder = async (req: Request, res: Response) =
 export const getAllStripeProducts = async (req: Request, res: Response) => {
   try {
       const response = await getAllProductsService(typeof req?.query?.status === 'string' ? req.query.status : undefined)
+      return res.status(httpStatusCode.OK).json(response)
+  } catch (error) {
+      const { code, message } = errorParser(error)
+      return res.status(code || httpStatusCode.INTERNAL_SERVER_ERROR).json({ success: false, message: message || "An error occurred" });
+  }
+}
+
+
+export const getAllStripeProductsForCompany = async (req: Request, res: Response) => {
+  try {
+      const response = await getAllProductsForCompanyService(req,typeof req?.query?.status === 'string' ? req.query.status : undefined)
       return res.status(httpStatusCode.OK).json(response)
   } catch (error) {
       const { code, message } = errorParser(error)

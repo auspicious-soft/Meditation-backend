@@ -2,7 +2,7 @@ import { Router } from "express";
 import { createCompany, deleteCompanyById, getCompanyById, getCompanyDashboard, updateCompany } from "src/controllers/company/company";
 import { createJoinRequest, deleteJoinRequest, getAllJoinRequests, getJoinRequestById, updateJoinRequest } from "src/controllers/user-join-requests/user-join-requests-controller";
 import { getAllNotificationsOfUser, markAllNotificationsAsRead, markSingleNotificationAsRead } from "src/controllers/notifications/notifications-controller";
-import { cancelSubscription, createSubscription } from "src/controllers/subscription/subscription-controller";
+import { cancelSubscription, createSubscription, getAllStripeProducts, getAllStripeProductsForCompany, getPrices } from "src/controllers/subscription/subscription-controller";
 import { createUser, deactivateUser, deleteUser, editUserInfo, getAllUserForCompany, getUserInfo } from "src/controllers/user/user";
 
 
@@ -33,5 +33,9 @@ router.get("/join-requests", getJoinRequestById);
 router.get("/join-requests", getAllJoinRequests);
 router.put("/join-requests/:id", updateJoinRequest);
 router.delete("/join-requests/:id", deleteJoinRequest);
+
+//stripe
+router.get('/products', getAllStripeProductsForCompany);
+router.get('/prices', getPrices);
 
 export { router }
