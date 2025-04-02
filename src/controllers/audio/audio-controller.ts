@@ -1,7 +1,7 @@
 import { Request, Response } from "express"
 import { httpStatusCode } from "src/lib/constant"
 import { errorParser } from "src/lib/errors/error-response-handler"
-import { deleteAudioService, getAllAudiosService, getAudioByIdService, getfilterOptionsService, searchAudiosService, updateAudioService, uploadAudioService } from "src/services/audio/audio-services"
+import { deleteAudioService, getAllAudiosService, getAudioByIdService, getfilterOptionsService, getTrendingAudiosService, searchAudiosService, updateAudioService, uploadAudioService } from "src/services/audio/audio-services"
 
 
 export const uploadAudio = async (req: Request, res: Response) =>{
@@ -65,6 +65,15 @@ export const getfilterOptions= async (req: Request, res: Response) =>{
 export const searchAudios = async (req: Request, res: Response) =>{
   try {
      const response: any = await searchAudiosService(req, res)
+            return res.status(httpStatusCode.OK).json(response)
+  } catch (error) {
+      const { code, message } = errorParser(error)
+          return res.status(code || httpStatusCode.INTERNAL_SERVER_ERROR).json({ success: false, message: message || "An error occurred" })
+    }
+}
+export const getTrendingAudios = async (req: Request, res: Response) =>{
+  try {
+     const response: any = await getTrendingAudiosService(req, res)
             return res.status(httpStatusCode.OK).json(response)
   } catch (error) {
       const { code, message } = errorParser(error)

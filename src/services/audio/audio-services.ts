@@ -7,6 +7,7 @@ import { AudioModel } from "src/models/audio/audio-schema";
 import { bestForModel } from "src/models/bestfor/bestfor-schema";
 import { collectionModel } from "src/models/collection/collection-schema";
 import { levelModel } from "src/models/level/level-schema";
+import { userAudioHistoryModel } from "src/models/useraudiohistory/user-audio-history";
 import { queryBuilder } from "src/utils";
 
 const capitalizeFirstLetter = (string: string) => {
@@ -317,3 +318,115 @@ export const searchAudiosService = async (req: any, res: Response) => {
         };
    
 }
+
+
+
+export const getTrendingAudiosService = async (req: any, res: Response) => {
+  // Extract query parameters (if any, for future use)
+  const trendingAudio = await userAudioHistoryModel.aggregate([
+      {
+          $group: {
+              _id: "$audio_id",
+              count: { $sum: 1 },
+          },
+      },
+      {
+          $sort: { count: -1 },
+      },
+      // Removed $limit to fetch all audios (already commented out in your code)
+      {
+          $lookup: {
+              from: "audios",
+              localField: "_id",
+              foreignField: "_id",
+              as: "audioDetails",
+          },
+      },
+      {
+          $unwind: {
+              path: "$audioDetails",
+              preserveNullAndEmptyArrays: true, // Changed to true to keep audios even if audioDetails is not found
+          },
+      },
+      // Populate collectionType for audioDetails (if audioDetails exists)
+      {
+          $lookup: {
+              from: "collections",
+              localField: "audioDetails.collectionType",
+              foreignField: "_id",
+              as: "audioDetails.collectionType",
+          },
+      },
+      {
+          $unwind: {
+              path: "$audioDetails.collectionType",
+              preserveNullAndEmptyArrays: true, // Keep audios even if collectionType is not found
+          },
+      },
+      // Populate bestFor and levels for collectionType (if collectionType exists)
+      {
+          $lookup: {
+              from: "bestfors",
+              localField: "audioDetails.collectionType.bestFor",
+              foreignField: "_id",
+              as: "audioDetails.collectionType.bestFor",
+          },
+      },
+      {
+          $unwind: {
+              path: "$audioDetails.collectionType.bestFor",
+              preserveNullAndEmptyArrays: true,
+          },
+      },
+      {
+          $lookup: {
+              from: "levels",
+              localField: "audioDetails.collectionType.levels",
+              foreignField: "_id",
+              as: "audioDetails.collectionType.levels",
+          },
+      },
+      // Populate bestFor and levels for audioDetails (if audioDetails exists)
+      {
+          $lookup: {
+              from: "bestfors",
+              localField: "audioDetails.bestFor",
+              foreignField: "_id",
+              as: "audioDetails.bestFor",
+          },
+      },
+      {
+          $lookup: {
+              from: "levels",
+              localField: "audioDetails.levels",
+              foreignField: "_id",
+              as: "audioDetails.levels",
+          },
+      },
+      // Optional: Project to clean up the output (if needed)
+      {
+          $project: {
+              _id: 1,
+              count: 1,
+              audioDetails: {
+                  _id: 1,
+                  title: 1, // Include other fields from audioDetails as needed
+                  bestFor: 1,
+                  levels: 1,
+                  collectionType: {
+                      _id: 1,
+                      name: 1, // Include other fields from collectionType as needed
+                      bestFor: 1,
+                      levels: 1,
+                  },
+              },
+          },
+      },
+  ]);
+
+  return {
+      success: true,
+      message: "Trending Audios fetched successfully",
+      data: trendingAudio,
+  };
+};

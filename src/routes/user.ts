@@ -14,7 +14,7 @@ import {
 } from "../controllers/user/user";
 import { checkAuth } from "src/middleware/check-auth";
 import { UserAudioHistory } from "src/controllers/useraudiohistory/useraudiohistory-controller";
-import { getAudioById, getfilterOptions, searchAudios } from "src/controllers/audio/audio-controller";
+import { getAudioById, getfilterOptions, getTrendingAudios, searchAudios } from "src/controllers/audio/audio-controller";
 import { getAllCollections, getCollectionById, getCollectionWithAudio } from "src/controllers/collection/collection-controller";
 import { searchCollections } from "src/controllers/company/company";
 import { getAllFAQ, getFAQById } from "src/controllers/FAQs/FAQs-controller";
@@ -48,6 +48,7 @@ router.put("/update/details",checkAuth, updateUserDetails);
 
 //Audio routes
 router.get("/audio/:id",checkAuth, getAudioById);
+router.get("/trending-audio",checkAuth, getTrendingAudios);
 
 //FAQs routes
 router.get("/FAQs/get-all",checkAuth, getAllFAQ);
