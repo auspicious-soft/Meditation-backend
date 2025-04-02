@@ -56,7 +56,7 @@ export const sendUserVerificationEmail = async (email: string, verificationCode:
       html: `
         <h3>Verify your email address</h3>
         <p>Please verify your email address by entering the following verification code: ${verificationCode}</p>
-  
+        <p>Thank you for signing up!</p>
       `,
     });
   } catch (error) {
