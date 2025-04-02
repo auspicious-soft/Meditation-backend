@@ -2,7 +2,7 @@ import { Router } from "express";
 import { createCompany, deleteCompanyById, getCompanyById, getCompanyDashboard, updateCompany } from "src/controllers/company/company";
 import { createJoinRequest, deleteJoinRequest, getAllJoinRequests, getJoinRequestById, updateJoinRequest } from "src/controllers/user-join-requests/user-join-requests-controller";
 import { getAllNotificationsOfUser, markAllNotificationsAsRead, markSingleNotificationAsRead } from "src/controllers/notifications/notifications-controller";
-import { cancelSubscription, createSubscription, getAllStripeProducts, getAllStripeProductsForCompany, getPrices } from "src/controllers/subscription/subscription-controller";
+import { cancelSubscription, createSubscription, getAllStripeProducts, getAllStripeProductsForCompany, getCompanyTransactions, getPrices } from "src/controllers/subscription/subscription-controller";
 import { createUser, deactivateUser, deleteUser, editUserInfo, getAllUserForCompany, getUserInfo } from "src/controllers/user/user";
 
 
@@ -18,6 +18,7 @@ router.put("/update-company/:id", updateCompany);
 
 router.post("/create-subscription/:id", createSubscription);
 router.post("/cancel-subscription/:id", cancelSubscription);
+router.get("/transactions", getCompanyTransactions);
 //notifications route
 router.route("/:id/notifications").get( getAllNotificationsOfUser).put( markAllNotificationsAsRead)
 router.route("/:id/notifications/mark-as-read").put(markSingleNotificationAsRead)

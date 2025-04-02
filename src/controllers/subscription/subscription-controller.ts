@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import mongoose from 'mongoose';
 import { httpStatusCode } from 'src/lib/constant';
 import { errorParser } from 'src/lib/errors/error-response-handler';
-import { afterSubscriptionCreatedService, cancelSubscriptionService, createSubscriptionService, getAllCouponsService, getAllProductsForCompanyService, getAllProductsService, getAllSubscriptions, getPricesService, getSubscriptionById, subscriptionExpireInAWeekService, subscriptionExpireRemainderService, updatePricesService } from 'src/services/subscription/subscription-service';
+import { afterSubscriptionCreatedService, cancelSubscriptionService, createSubscriptionService, getAllCouponsService, getAllProductsForCompanyService, getAllProductsService, getAllSubscriptions, getCompanyTransactionsService, getPricesService, getSubscriptionById, subscriptionExpireInAWeekService, subscriptionExpireRemainderService, updatePricesService } from 'src/services/subscription/subscription-service';
 
 export const updatePrices = async (req: any, res: Response) => {
   try {
@@ -51,6 +51,18 @@ export const getAllCoupons = async (req: Request, res: Response) => {
   export async function getAllSubscriptionsHandler(req: Request, res: Response) {
     try {
       const subscriptions = await getAllSubscriptions();
+      return res.status(httpStatusCode.OK).json(subscriptions);
+    } catch (error: any) {
+      const { code, message } = errorParser(error);
+      return res.status(code || httpStatusCode.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        message: message || "An error occurred while retrieving the subscriptions",
+      });
+    }
+  }
+  export async function getCompanyTransactions(req: Request, res: Response) {
+    try {
+      const subscriptions = await getCompanyTransactionsService(req, res);
       return res.status(httpStatusCode.OK).json(subscriptions);
     } catch (error: any) {
       const { code, message } = errorParser(error);

@@ -101,14 +101,16 @@ const goldProductId = process.env.STRIPE_PRODUCT_GOLD_PLAN;
   
 	  // If companyId is provided, fetch company details and add currentPlan to the matching product
 	  if (companyId) {
-		const companyDetails = await companyModels.findById(companyId);
+		const companyDetails = await companyModels.find({
+		  _id: companyId,
+		});
   
 		if (!companyDetails) {
 		  throw new Error("Company not found");
 		}
   
-		const companyPlanType = companyDetails.planType; // e.g., "goldPlan"
-		const subscriptionExpiryDate = companyDetails.subscriptionExpiryDate; // e.g., "2025-04-20T11:07:47.000Z"
+		const companyPlanType = companyDetails[0]?.planType; // e.g., "goldPlan"
+		const subscriptionExpiryDate = companyDetails[0]?.subscriptionExpiryDate; // e.g., "2025-04-20T11:07:47.000Z"
   
 		// Map planType to product name (e.g., "goldPlan" -> "Gold Plan")
 		const planTypeToProductName: { [key: string]: string } = {
@@ -495,150 +497,169 @@ export async function subscriptionExpireRemainderService(id: string, res: Respon
 }
 
 
+const fetchAllInvoices = async (customerId: string) => {
+    let allInvoices: any[] = [];
+    let hasMore = true;
+    let startingAfter: string | undefined;
 
-// export const createSubscriptionService = async (id: string, payload: any, res: Response) => {
-//     const idempotencyKey = uuidv4()
-//     const userId = id
-// 	const { planType, interval = 'monthly', email, name }: { planType: keyof typeof planIdsMap; interval?: string; email: string; name: string } = payload
-//     if (!planType || !userId) return errorResponseHandler("Invalid request", 400, res)
-// 	const isPlanType = (type: string): boolean => ['goldPlan', 'silverPlan','bronzePlan'].includes(type);
-// 	if (!isPlanType(planType as string)) return errorResponseHandler("Invalid plan type", 400, res)
-//     const planId = planIdsMap[planType]
-//     const priceId = (planId as any)[interval as any]
-//     if (!priceId) return errorResponseHandler("Invalid interval", 400, res)
-
-//     const user = await companyModels.findById(userId)
-//     if (!user) return errorResponseHandler("User not found", 404, res)
-
-//     let customer;
-//     if (user.stripeCustomerId == "" || user.stripeCustomerId === null || !user.stripeCustomerId) {
-//         customer = await stripe.customers.create({
-//             metadata: {
-//                 userId,
-//             },
-//             email: email,
-//             name: name
-//         })
-//         await companyModels.findByIdAndUpdate(userId, { stripeCustomerId: customer.id }, { new: true, upsert: true })
-//     }
-//     else {
-//         customer = await stripe.customers.retrieve(user.stripeCustomerId as string)
-//     }
-//     try {
-//         // Create the subscription directly with payment_behavior set to default_incomplete
-//         const subscription: any = await stripe.subscriptions.create({
-//             customer: customer.id,
-//             items: [{ price: priceId }],
-//             payment_behavior: 'default_incomplete',
-//             expand: ['latest_invoice.payment_intent'],
-//             metadata: { userId: id, idempotencyKey, planType, interval, name, email, planId: priceId },
-//         }, {
-//             idempotencyKey
-//         });
-
-//         // Retrieve the client secret from the payment intent
-//         const clientSecret = subscription.latest_invoice.payment_intent.client_secret;
-
-//         return {
-//             status: true,
-//             clientSecret,
-//             subscriptionId: subscription.id
-//         }
-//     } catch (error) {
-//         console.error('Subscription creation error:', error);
-//         return errorResponseHandler("Failed to create subscription", 400, res);
-//     }
-// }
-
-export const createSubscriptionService = async (company: any, payload: any, res: Response) => {
-	console.log('payload: ', payload);
-	console.log('company: ', company);
-    const idempotencyKey = uuidv4()
-    const userId = company.id
-    const { planType, interval = 'month', email, name }: { 
-        planType: keyof typeof planIdsMap; 
-        interval?: string; 
-        email: string; 
-        name: string 
-    } = payload
-    
-    if (!planType || !userId) return errorResponseHandler("Invalid request", 400, res)
-    const isPlanType = (type: string): boolean => ['goldPlan', 'silverPlan', 'bronzePlan'].includes(type);
-    if (!isPlanType(planType as string)) return errorResponseHandler("Invalid plan type", 400, res)
-    
-    const planId = planIdsMap[planType]
-    
-    // Fetch prices for the plan from Stripe
-    let priceId;
-    try {
-		const prices = await stripe.prices.list({
-			product: planId,
-			active: true,
-			recurring: { interval: interval as 'month' | 'year' }
-		});
-        
-        if (!prices.data.length) {
-            return errorResponseHandler("No active prices found for this plan and interval", 400, res);
-        }
-        
-        // Get the first matching price (or you could add more specific filtering)
-        priceId = prices.data[0].id;
-    } catch (error) {
-        console.error('Error fetching prices from Stripe:', error);
-        return errorResponseHandler("Failed to fetch plan prices", 400, res);
-    }
-
-    const user = await companyModels.findById(userId)
-    if (!user) return errorResponseHandler("User not found", 404, res)
-
-    let customer;
-    if (!user.stripeCustomerId) {
-        customer = await stripe.customers.create({
-            metadata: {
-                userId,
-            },
-            email: email,
-            name: name
-        })
-        await companyModels.findByIdAndUpdate(userId, { 
-            stripeCustomerId: customer.id 
-        }, { 
-            new: true, 
-            upsert: true 
-        })
-    } else {
-        customer = await stripe.customers.retrieve(user.stripeCustomerId as string)
-    }
-
-    try {
-        // Create the subscription directly with payment_behavior set to default_incomplete
-		const subscription: any = await stripe.subscriptions.create({
-			customer: customer.id,
-            items: [{ price: priceId }],
-			payment_behavior: 'default_incomplete',
-            expand: ['latest_invoice.payment_intent'],
-            metadata: { userId: company.id, idempotencyKey, planType, interval, name, email, planId: priceId },
-        }, {
-            idempotencyKey
+    while (hasMore) {
+        const invoices = await stripe.invoices.list({
+            customer: customerId,
+            limit: 100,
+            starting_after: startingAfter,
+            expand: ['data.charge', 'data.lines']
         });
 
-        // Retrieve the client secret from the payment intent
-        const clientSecret = subscription.latest_invoice.payment_intent.client_secret;
-
-        return {
-            status: true,
-            clientSecret,
-            subscriptionId: subscription.id
-        }
-    } catch (error) {
-        console.error('Subscription creation error:', error);
-        return errorResponseHandler("Failed to create subscription", 400, res);
+        allInvoices = allInvoices.concat(invoices.data);
+        hasMore = invoices.has_more;
+        startingAfter = invoices.data[invoices.data.length - 1]?.id;
     }
-}
+    return allInvoices;
+};
+
+export const getCompanyTransactionsService = async (company: any, res: Response) => {
+	    const userId = company.currentUser;
+    // try {
+        // Find user
+        const user = await companyModels.find({ _id: userId });
+        if (!user || user.length === 0) {
+            return errorResponseHandler("User not found", httpStatusCode.NOT_FOUND, res);
+        }
+
+        const stripeCustomerId = user[0].stripeCustomerId as string;
+        if (!stripeCustomerId) {
+            return errorResponseHandler("No Stripe customer ID found for user", httpStatusCode.BAD_REQUEST, res);
+        }
+    const invoices = await fetchAllInvoices(stripeCustomerId);
+
+    // Filter only paid invoices
+    const completedInvoices = invoices
+        .filter(invoice => invoice.status === 'paid')
+        .map(invoice => ({
+            transactionId:  invoice.id, // Use charge ID if available, else fallback to invoice ID
+            planType: invoice.lines?.data[0]?.plan?.nickname || invoice.lines?.data[0]?.description || 'Unknown Plan', // Plan Name
+            purchaseDate: new Date(invoice.created * 1000).toISOString(), // Purchase Date
+            transactionAmount: invoice.amount_paid ? (invoice.amount_paid / 100).toFixed(2) : '0.00' // Amount in dollars
+        }));
+
+    return {success: true, data: completedInvoices};
+};
+
+export const createSubscriptionService = async (company: any, payload: any, res: Response) => {
+
+	const idempotencyKey = uuidv4();
+	const userId = company.id;
+	const { planType, interval = 'month', email, name }: { 
+	  planType: keyof typeof planIdsMap; 
+	  interval?: string; 
+	  email: string; 
+	  name: string 
+	} = payload;
+  
+	// Validate inputs
+	if (!planType || !userId) return errorResponseHandler("Invalid request", httpStatusCode.BAD_REQUEST, res);
+	const isPlanType = (type: string): boolean => ['goldPlan', 'silverPlan', 'bronzePlan'].includes(type);
+	if (!isPlanType(planType as string)) return errorResponseHandler("Invalid plan type", httpStatusCode.BAD_REQUEST, res);
+  
+	const planId = planIdsMap[planType];
+  
+	// Fetch prices for the plan from Stripe
+	let priceId;
+	try {
+	  const prices = await stripe.prices.list({
+		product: planId,
+		active: true,
+		recurring: { interval: interval as 'month' | 'year' },
+	  });
+  
+	  if (!prices.data.length) {
+		return errorResponseHandler("No active prices found for this plan and interval", httpStatusCode.BAD_REQUEST, res);
+	  }
+  
+	  // Get the first matching price (or you could add more specific filtering)
+	  priceId = prices.data[0].id;
+	} catch (error) {
+	  console.error('Error fetching prices from Stripe:', error);
+	  return errorResponseHandler("Failed to fetch plan prices", httpStatusCode.BAD_REQUEST, res);
+	}
+  
+	// Fetch the user
+	const user = await companyModels.findById(userId);
+	if (!user) return errorResponseHandler("User not found", httpStatusCode.NOT_FOUND, res);
+  
+	// Create or retrieve Stripe customer
+	let customer;
+	console.log('customer: ', customer);
+	if (!user.stripeCustomerId) {
+		customer = await stripe.customers.create({
+			metadata: {
+				userId,
+			},
+			email: email,
+			name: name,
+	  });
+	  await companyModels.findByIdAndUpdate(
+		  userId,
+		{ stripeCustomerId: customer.id },
+		{ new: true, upsert: true }
+	);
+	} else {
+	  customer = await stripe.customers.retrieve(user.stripeCustomerId as string);
+	}
+	console.log('customer: ', customer);
+  
+	try {
+	  // Create a Stripe Checkout session
+	  const session = await stripe.checkout.sessions.create(
+		{
+		  customer: customer.id,
+		  line_items: [
+			{
+			  price: priceId, // Use the fetched priceId
+			  quantity: 1,
+			},
+		  ],
+		  mode: 'subscription',
+		  success_url: process.env.STRIPE_FRONTEND_SUCCESS_CALLBACK as string, // e.g., "https://yourdomain.com/success"
+		  cancel_url: process.env.STRIPE_FRONTEND_CANCEL_CALLBACK as string, // e.g., "https://yourdomain.com/cancel"
+		  metadata: {
+			userId,
+			planType,
+			idempotencyKey,
+			interval,
+			name,
+			customerId: customer.id,
+			email,
+		  },
+		  subscription_data: {
+			metadata: {
+			  userId,
+			  planType,
+			  idempotencyKey,
+			  interval,
+			  name,
+			  email,
+			  customerId: customer.id,
+			},
+		  },
+		},
+		{
+		  idempotencyKey, // Pass idempotency key to Stripe
+		}
+	  );
+  
+	  return {
+		id: session.id,
+		success: true,
+	  };
+	} catch (error) {
+	  console.error('Error creating checkout session:', error);
+	  return errorResponseHandler("Failed to create subscription", httpStatusCode.BAD_REQUEST, res);
+	}
+  };
 
 export const afterSubscriptionCreatedService = async (payload: any, transaction: mongoose.mongo.ClientSession, res: Response<any, Record<string, any>>) => {
     const sig = payload.headers['stripe-signature'];
-	console.log('sig: ', sig);
     let checkSignature: Stripe.Event;
     try {
         checkSignature = stripe.webhooks.constructEvent(payload.rawBody, sig, process.env.STRIPE_WEBHOOK_SECRET as string);
@@ -649,48 +670,51 @@ export const afterSubscriptionCreatedService = async (payload: any, transaction:
     }
     const event = payload.body
 
-   
-    if (event.type === 'payment_intent.succeeded') {
-		console.log('payment_intent.succeeded: ');
-        let paymentIntent = event.data.object as Stripe.PaymentIntent;
-        const invoiceId = paymentIntent.invoice as string;
-		console.log('invoiceId: ', invoiceId);
-        if (!invoiceId) {
-            console.log('No invoice ID found in payment intent');
-            return;
-        }
 
-        // Fetch the invoice to get subscription ID
-        const invoice = await stripe.invoices.retrieve(invoiceId);
-        const subscriptionId = invoice.subscription as string;
-        const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+	if (event.type === 'payment_intent.succeeded' || event.type === 'checkout.session.completed') {
+		console.log('checkout.session.completed: ');
+		const session = event.data.object as Stripe.Checkout.Session;
+		const subscriptionId = session.subscription as string;
+		if (!subscriptionId) {
+		  console.log('No subscription ID found in checkout session');
+		  return;
+		}
+	
+		// Fetch the subscription to get metadata
+		const subscription = await stripe.subscriptions.retrieve(subscriptionId);
 		console.log('subscription: ', subscription);
-        const { userId, planType, interval } = subscription.metadata;
+		const { userId, planType, interval } = subscription.metadata;
 		console.log('planType: ', planType);
-        const user = await companyModels.findById(userId);
-        if (!user) return errorResponseHandler('User or customer ID not found', 404, res);
-
-        if (user.subscriptionId && user.subscriptionId !== subscriptionId) {
-            try {
-                await stripe.subscriptions.cancel(user.subscriptionId as string)
-            } catch (error) {
-                console.error('Error cancelling old subscription:', error)
-            }
-        }
-        await companyModels.findByIdAndUpdate(userId, {
-            planType,
-            planInterval: interval,
-            subscriptionId: subscriptionId, 
-			subscriptionStatus: subscription.status,
-			subscriptionExpiryDate: timestampToDateString(subscription.current_period_end),
-		    subscriptionStartDate: timestampToDateString(subscription.current_period_start),
-        })
-        return {
-            success: true,
-            message: 'Subscription created successfully'
-        }
-    }
-
+	
+		// Fetch the user
+		const user = await companyModels.findById(userId);
+		if (!user) return errorResponseHandler('User or customer ID not found', 404, res);
+	
+		// Cancel any existing subscription if it exists and is different from the new one
+		if (user.subscriptionId && user.subscriptionId !== subscriptionId) {
+		  try {
+			console.log(`Canceling existing subscription: ${user.subscriptionId}`);
+			await stripe.subscriptions.cancel(user.subscriptionId as string);
+		  } catch (error) {
+			console.error('Error cancelling old subscription:', error);
+		  }
+		}
+	
+		// Update the user with the new subscription details
+		await companyModels.findByIdAndUpdate(userId, {
+		  planType,
+		  planInterval: interval,
+		  subscriptionId: subscriptionId,
+		  subscriptionStatus: subscription.status,
+		  subscriptionExpiryDate: timestampToDateString(subscription.current_period_end),
+		  subscriptionStartDate: timestampToDateString(subscription.current_period_start),
+		});
+	
+		return {
+		  success: true,
+		  message: 'Subscription created successfully',
+		};
+	  }
     if (event.type === 'invoice.payment_succeeded') {
         const invoice = event.data.object as Stripe.Invoice;
         const { customer: customerId, subscription: subscriptionId } = invoice

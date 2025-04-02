@@ -54,6 +54,10 @@ app.get("/", (_, res: any) => {
 app.post("/api/company/signup", companySignup);
 app.post("/api/company/verify-email", verifyCompanyEmail);
 app.use("/api/admin", checkValidAdminRole, admin);
+app.post('/api/company/webhook', express.raw({ type: 'application/json' }), afterSubscriptionCreated)
+app.get('/api/company/webhook', (req, res) => {
+  res.send('Webhook endpoint is active! Use POST to send events.');
+});
 app.use("/api/company",checkAuth,checkValidCompanyRole,company)
 app.use("/api/user", user);
 app.post("/api/login", login);
@@ -64,8 +68,4 @@ app.use("/api/audio", audio);
 app.post("/api/forgot-password", forgotPassword);
 app.post("/api/verify-otp", verifyOtpPasswordReset);
 app.patch("/api/otp-new-password-verification", newPassswordAfterOTPVerified);
-app.post('/api/company/webhook', express.raw({ type: 'application/json' }), afterSubscriptionCreated)
-app.get('/api/company/webhook', (req, res) => {
-  res.send('Webhook endpoint is active! Use POST to send events.');
-});
 app.listen(PORT, () => console.log(`Server is listening on port ${PORT}`));
