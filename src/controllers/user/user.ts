@@ -24,6 +24,7 @@ import {
 	getHomePageService,
 	resendOtpService,
 	updateUserDetailsService,
+    getBlockedUserService,
 } from "../../services/user/user";
 import { z } from "zod";
 import mongoose from "mongoose";
@@ -231,9 +232,10 @@ export const resendOtp = async (req: Request, res: Response) => {
 		const { code, message } = errorParser(error);
 		return res.status(code || httpStatusCode.INTERNAL_SERVER_ERROR).json({ success: false, message: message || "An error occurred" });
 	}
-};export const getAllBlockedUser =async(req:Request, res:Response)=>{
+};
+export const getAllBlockedUser =async(req:Request, res:Response)=>{
     try {
-        const response = await getBlockedUserService( req.body.email, res); 
+        const response = await getBlockedUserService( req, res); 
         return res.status(httpStatusCode.OK).json(response);
     } catch (error: any) {
         const { code, message } = errorParser(error);
