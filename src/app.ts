@@ -53,7 +53,7 @@ app.get("/", (_, res: any) => {
  
 app.post("/api/company/signup", companySignup);
 app.post("/api/company/verify-email", verifyCompanyEmail);
-app.use("/api/admin", checkValidAdminRole, admin);
+app.use("/api/admin",checkAuth, checkValidAdminRole, admin);
 app.post('/api/company/webhook', express.raw({ type: 'application/json' }), afterSubscriptionCreated)
 app.get('/api/company/webhook', (req, res) => {
   res.send('Webhook endpoint is active! Use POST to send events.');
