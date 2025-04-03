@@ -65,6 +65,10 @@ const usersSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    totalMeditationListen:{
+      type: Number,
+      default: 0,
+    },
     isVerifiedByCompany:{
       type:String,
       enum:["pending","approved","rejected"],
