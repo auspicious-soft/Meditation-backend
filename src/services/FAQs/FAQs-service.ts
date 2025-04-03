@@ -39,6 +39,7 @@ export const getAllFAQService = async (res: Response,page: number = 1,limit: num
      .find()
      .skip(skip)
      .limit(itemsPerPage)
+     .sort({createdAt : -1})
      .exec();
 
    // If no FAQs are found, return an error response
