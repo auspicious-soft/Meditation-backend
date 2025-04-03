@@ -329,3 +329,12 @@ export const AnalyticsService = async ( res: Response) => {
   };
 };
 
+export const getAdminDetailService = async(req :any, res: Response)=>{
+  const admin = await adminModel.findOne({_id: req.user._id});
+  if(!admin) return errorResponseHandler("Admin not found", httpStatusCode.NOT_FOUND, res);
+  return {
+    success: true,
+    message: "Admin fetched successfully",
+    data: admin
+  }
+}
