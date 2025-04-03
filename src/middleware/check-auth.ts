@@ -58,6 +58,7 @@ export const checkAuth = async (req: Request, res: Response, next: NextFunction)
                 (req as any).currentUser = decoded.id
             }
 
+            
         next()
     } catch (error) {
         return res.status(httpStatusCode.UNAUTHORIZED).json({ success: false, message: "Unauthorized" })
