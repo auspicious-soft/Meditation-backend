@@ -148,7 +148,7 @@ export const afterSubscriptionCreated = async (req: Request, res: Response) => {
 }
 export const cancelSubscription = async (req: Request, res: Response) => {
   try {
-      const response = await cancelSubscriptionService( req.params.id, res)
+      const response = await cancelSubscriptionService( req , res)
       return res.status(httpStatusCode.CREATED).json(response)
   } catch (error) {
       const { code, message } = errorParser(error)

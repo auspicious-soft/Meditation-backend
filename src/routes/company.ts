@@ -17,7 +17,7 @@ router.put("/update-company/:id", updateCompany);
 
 
 router.post("/create-subscription/:id", createSubscription);
-router.post("/cancel-subscription/:id", cancelSubscription);
+router.post("/cancel-subscription", cancelSubscription);
 router.get("/transactions", getCompanyTransactions);
 //notifications route
 router.route("/:id/notifications").get( getAllNotificationsOfUser).put( markAllNotificationsAsRead)

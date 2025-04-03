@@ -111,6 +111,7 @@ const goldProductId = process.env.STRIPE_PRODUCT_GOLD_PLAN;
   
 		const companyPlanType = companyDetails[0]?.planType; // e.g., "goldPlan"
 		const subscriptionExpiryDate = companyDetails[0]?.subscriptionExpiryDate; // e.g., "2025-04-20T11:07:47.000Z"
+		const subscriptionId = companyDetails[0]?.subscriptionId; // e.g., "2025-04-20T11:07:47.000Z"
   
 		// Map planType to product name (e.g., "goldPlan" -> "Gold Plan")
 		const planTypeToProductName: { [key: string]: string } = {
@@ -128,6 +129,7 @@ const goldProductId = process.env.STRIPE_PRODUCT_GOLD_PLAN;
 			  name: product.name,
 			  id: product.id,
 			  expiryDate: subscriptionExpiryDate,
+			  subscriptionId: subscriptionId,
 			};
 		  }
 		});
@@ -807,8 +809,8 @@ export const afterSubscriptionCreatedService = async (payload: any, transaction:
     }
 }
 
-export const cancelSubscriptionService = async (id: string,  res: Response) => {
-    const user = await companyModels.findById(id)
+export const cancelSubscriptionService = async (company: any,  res: Response) => {
+    const user = await companyModels.findById(company.currentUser)
     if (!user) return errorResponseHandler("User not found", 404, res)
 
     const subscription = await stripe.subscriptions.retrieve(user.subscriptionId as string)
@@ -818,14 +820,15 @@ export const cancelSubscriptionService = async (id: string,  res: Response) => {
     if (subscription.id !== user.subscriptionId) return errorResponseHandler("Invalid subscription ID", 400, res)
 
     await stripe.subscriptions.cancel(subscription.id as string)
-    await companyModels.findByIdAndUpdate(id,
+    await companyModels.findByIdAndUpdate(company.currentUser,
         {
-            planOrSubscriptionId: null,
-            planInterval: null, 
-			planType: null,
+            subscriptionId: null,
+            planInterval: "", 
+			planType: "",
 			subscriptionStatus: "canceled",
 			subscriptionExpiryDate: null,
-			subscriptionStartDate: null
+			subscriptionStartDate: null,
+																																				
         },
         { new: true })
 
