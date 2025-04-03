@@ -48,7 +48,8 @@ export const loginService = async (payload: any, req: any, res: Response) => {
   //   return errorResponseHandler("User is not verified by Admin", httpStatusCode.FORBIDDEN, res);
   // }
   if(isMobileApp && user.role ==="user"){
-    const company = await companyModels.find({companyName:user.companyName});                                                     
+    const company = await companyModels.find({companyName:user.companyName});    
+    if(!company || company.length === 0) return errorResponseHandler("Company not found", httpStatusCode.NOT_FOUND, res);                                                 
     if(company[0].subscriptionStatus === "inactive"){
       return errorResponseHandler("Company subscription is inactive", httpStatusCode.FORBIDDEN, res);
     }
