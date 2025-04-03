@@ -262,64 +262,124 @@ export const getfilterOptionsService = async (req: Request, res: Response) => {
     };
 };
 
-export const searchAudiosService = async (req: any, res: Response) => {
-        // Extract query parameters
-        const { songName, levels, bestFor } = req.query;
+// export const searchAudiosService = async (req: any, res: Response) => {
+//         // Extract query parameters
+//         const { songName, levels, bestFor } = req.query;
 
-        // Initialize query with base filter for active audios
-        let query: Record<string, any> = { isActive: true };
+//         // Initialize query with base filter for active audios
+//         let query: Record<string, any> = { isActive: true };
 
-        // Handle songName parameter
-        if (songName) {
-            query.songName = { $regex: songName, $options: 'i' };
-        }
+//         // Handle songName parameter
+//         if (songName) {
+//             query.songName = { $regex: songName, $options: 'i' };
+//         }
 
-        // Handle levels parameter
-        if (levels) {
-            const levelNames = levels.split(',').map((name: string) => name.trim());
-            const levelDocs = await levelModel.find({ 
-                name: { $in: levelNames }, 
-                isActive: true 
-            });
-            const levelIds = levelDocs.map(doc => doc._id);
-            if (levelIds.length > 0) {
-                query.levels = { $in: levelIds };
-            } else {
-                query._id = null; // No matching levels, return no results
-            }
-        }
+//         // Handle levels parameter
+//         if (levels) {
+//             const levelNames = levels.split(',').map((name: string) => name.trim());
+//             const levelDocs = await levelModel.find({ 
+//                 name: { $in: levelNames }, 
+//                 isActive: true 
+//             });
+//             const levelIds = levelDocs.map(doc => doc._id);
+//             if (levelIds.length > 0) {
+//                 query.levels = { $in: levelIds };
+//             } else {
+//                 query._id = null; // No matching levels, return no results
+//             }
+//         }
 
-        // Handle bestFor parameter
-        if (bestFor) {
-            const bestForNames = bestFor.split(',').map((name: string) => name.trim());
-            const bestForDocs = await bestForModel.find({ 
-                name: { $in: bestForNames }, 
-                isActive: true 
-            });
-            const bestForIds = bestForDocs.map(doc => doc._id);
-            if (bestForIds.length > 0) {
-                query.bestFor = { $in: bestForIds };
-            } else {
-                query._id = null; // No matching bestFor, return no results
-            }
-        }
+//         // Handle bestFor parameter
+//         if (bestFor) {
+//             const bestForNames = bestFor.split(',').map((name: string) => name.trim());
+//             const bestForDocs = await bestForModel.find({ 
+//                 name: { $in: bestForNames }, 
+//                 isActive: true 
+//             });
+//             const bestForIds = bestForDocs.map(doc => doc._id);
+//             if (bestForIds.length > 0) {
+//                 query.bestFor = { $in: bestForIds };
+//             } else {
+//                 query._id = null; // No matching bestFor, return no results
+//             }
+//         }
 
-        // Execute query and populate referenced fields
-        const audios = await AudioModel.find(query)
-        .populate('levels')
-        .populate('bestFor')
-        .populate('collectionType');
+//         // Execute query and populate referenced fields
+//         const audios = await AudioModel.find(query)
+//         .populate('levels')
+//         .populate('bestFor')
+//         .populate('collectionType');
 
-        // Return the results
-        return {
-          success: true,
-          message: "Audios fetched successfully",
-          data:audios
-        };
+//         // Return the results
+//         return {
+//           success: true,
+//           message: "Audios fetched successfully",
+//           data:audios
+//         };
    
-}
+// }
 
+export const searchAudiosService = async (req: any, res: Response) => {
+  // Extract query parameters
+  const { songName, levels, bestFor } = req.query;
 
+  // Initialize query with base filter for active audios
+  let query: Record<string, any> = { isActive: true };
+
+  // Handle songName parameter
+  if (songName) {
+      query.songName = { $regex: songName, $options: 'i' };
+  }
+
+  // Handle levels parameter
+  if (levels) {
+      const levelNames = levels.split(',').map((name: string) => name.trim());
+      const levelDocs = await levelModel.find({ 
+          name: { $in: levelNames }, 
+          isActive: true 
+      });
+      const levelIds = levelDocs.map(doc => doc._id);
+      if (levelIds.length > 0) {
+          query.levels = { $in: levelIds };
+      } else {
+          query._id = null; // No matching levels, return no results
+      }
+  }
+
+  // Handle bestFor parameter
+  if (bestFor) {
+      const bestForNames = bestFor.split(',').map((name: string) => name.trim());
+      const bestForDocs = await bestForModel.find({ 
+          name: { $in: bestForNames }, 
+          isActive: true 
+      });
+      const bestForIds = bestForDocs.map(doc => doc._id);
+      if (bestForIds.length > 0) {
+          query.bestFor = { $in: bestForIds };
+      } else {
+          query._id = null; // No matching bestFor, return no results
+      }
+  }
+
+  // Execute query and populate referenced fields, including nested fields in collectionType
+  const audios = await AudioModel.find(query)
+      .populate('levels') // Populate top-level levels
+      .populate('bestFor') // Populate top-level bestFor
+      .populate({
+          path: 'collectionType', // Populate collectionType
+          populate: [
+              { path: 'levels' }, // Populate levels inside collectionType
+              { path: 'bestFor' } // Populate bestFor inside collectionType
+          ]
+      });
+
+  // Return the results
+  return {
+      success: true,
+      message: "Audios fetched successfully",
+      data: audios
+  };
+};
 
 export const getTrendingAudiosService = async (req: any, res: Response) => {
   // Extract query parameters (if any, for future use)
