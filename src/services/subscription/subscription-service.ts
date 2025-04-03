@@ -9,6 +9,7 @@ import { timestampToDateString } from "src/utils";
 import { sendPromoCodeEmail, subscriptionExpireReminder } from "src/utils/mails/mail";
 import Stripe from "stripe";
 import { v4 as uuidv4 } from 'uuid';
+import { number } from "zod";
 
 configDotenv();
 
@@ -547,43 +548,153 @@ export const getCompanyTransactionsService = async (company: any, res: Response)
     return {success: true, data: completedInvoices};
 };
 
-export const createSubscriptionService = async (company: any, payload: any, res: Response) => {
+// export const createSubscriptionService = async (company: any, payload: any, res: Response) => {
 
+// 	const idempotencyKey = uuidv4();
+// 	const userId = company.id;
+// 	const { planType, interval = 'month', email, name }: { 
+// 	  planType: keyof typeof planIdsMap; 
+// 	  interval?: string; 
+// 	  email: string; 
+// 	  name: string 
+// 	} = payload;
+  
+// 	// Validate inputs
+// 	if (!planType || !userId) return errorResponseHandler("Invalid request", httpStatusCode.BAD_REQUEST, res);
+// 	const isPlanType = (type: string): boolean => ['goldPlan', 'silverPlan', 'bronzePlan'].includes(type);
+// 	if (!isPlanType(planType as string)) return errorResponseHandler("Invalid plan type", httpStatusCode.BAD_REQUEST, res);
+  
+// 	const planId = planIdsMap[planType];
+  
+// 	// Fetch prices for the plan from Stripe
+// 	let priceId;
+// 	try {
+// 	  const prices = await stripe.prices.list({
+// 		product: planId,
+// 		active: true,
+// 		recurring: { interval: interval as 'month' | 'year' },
+// 	  });
+  
+// 	  if (!prices.data.length) {
+// 		return errorResponseHandler("No active prices found for this plan and interval", httpStatusCode.BAD_REQUEST, res);
+// 	  }
+  
+// 	  // Get the first matching price (or you could add more specific filtering)
+// 	  priceId = prices.data[0].id;
+// 	} catch (error) {
+// 	  console.error('Error fetching prices from Stripe:', error);
+// 	  return errorResponseHandler("Failed to fetch plan prices", httpStatusCode.BAD_REQUEST, res);
+// 	}
+  
+// 	// Fetch the user
+// 	const user = await companyModels.findById(userId);
+// 	if (!user) return errorResponseHandler("User not found", httpStatusCode.NOT_FOUND, res);
+  
+// 	// Create or retrieve Stripe customer
+// 	let customer;
+// 	console.log('customer: ', customer);
+// 	if (!user.stripeCustomerId) {
+// 		customer = await stripe.customers.create({
+// 			metadata: {
+// 				userId,
+// 			},
+// 			email: email,
+// 			name: name,
+// 	  });
+// 	  await companyModels.findByIdAndUpdate(
+// 		  userId,
+// 		{ stripeCustomerId: customer.id },
+// 		{ new: true, upsert: true }
+// 	);
+// 	} else {
+// 	  customer = await stripe.customers.retrieve(user.stripeCustomerId as string);
+// 	}
+// 	console.log('customer: ', customer);
+  
+// 	try {
+// 	  // Create a Stripe Checkout session
+// 	  const session = await stripe.checkout.sessions.create(
+// 		{
+// 		  customer: customer.id,
+// 		  line_items: [
+// 			{
+// 			  price: priceId, // Use the fetched priceId // PRICE DATA
+// 			  quantity: 1,
+// 			},
+// 		  ],
+// 		  mode: 'subscription',
+// 		  success_url: process.env.STRIPE_FRONTEND_SUCCESS_CALLBACK as string, // e.g., "https://yourdomain.com/success"
+// 		  cancel_url: process.env.STRIPE_FRONTEND_CANCEL_CALLBACK as string, // e.g., "https://yourdomain.com/cancel"
+// 		  metadata: {
+// 			userId,
+// 			planType,
+// 			idempotencyKey,
+// 			interval,
+// 			name,
+// 			customerId: customer.id,
+// 			email,
+// 		  },
+// 		  subscription_data: {
+// 			metadata: {
+// 			  userId,
+// 			  planType,
+// 			  idempotencyKey,
+// 			  interval,
+// 			  name,
+// 			  email,
+// 			  customerId: customer.id,
+// 			},
+// 		  },
+// 		},
+// 		{
+// 		  idempotencyKey, // Pass idempotency key to Stripe
+// 		}
+// 	  );
+  
+// 	  return {
+// 		id: session.id,
+// 		success: true,
+// 	  };
+// 	} catch (error) {
+// 	  console.error('Error creating checkout session:', error);
+// 	  return errorResponseHandler("Failed to create subscription", httpStatusCode.BAD_REQUEST, res);
+// 	}
+//   };
+
+export const createSubscriptionService = async (company: any, payload: any, res: Response) => {
 	const idempotencyKey = uuidv4();
 	const userId = company.id;
-	const { planType, interval = 'month', email, name }: { 
+	const { 
+	  planType, 
+	  interval = 'month', 
+	  email, 
+	  name, 
+	  numberOfUsers,
+	  price, // Add price to the payload
+	
+	}: { 
 	  planType: keyof typeof planIdsMap; 
 	  interval?: string; 
 	  email: string; 
-	  name: string 
+	  name: string; 
+	  price: number; // Price from frontend
+	  numberOfUsers?: number; // Optional numberOfUsers property
 	} = payload;
+	console.log('numberOfUsers: ', numberOfUsers);
   
 	// Validate inputs
-	if (!planType || !userId) return errorResponseHandler("Invalid request", httpStatusCode.BAD_REQUEST, res);
+	if (!planType || !userId || !price) 
+	  return errorResponseHandler("Invalid request: planType, userId, and price are required", httpStatusCode.BAD_REQUEST, res);
+	
 	const isPlanType = (type: string): boolean => ['goldPlan', 'silverPlan', 'bronzePlan'].includes(type);
-	if (!isPlanType(planType as string)) return errorResponseHandler("Invalid plan type", httpStatusCode.BAD_REQUEST, res);
+	if (!isPlanType(planType as string)) 
+	  return errorResponseHandler("Invalid plan type", httpStatusCode.BAD_REQUEST, res);
+  
+	// Validate price
+	if (typeof price !== 'number' || price <= 0) 
+	  return errorResponseHandler("Invalid price: must be a positive number", httpStatusCode.BAD_REQUEST, res);
   
 	const planId = planIdsMap[planType];
-  
-	// Fetch prices for the plan from Stripe
-	let priceId;
-	try {
-	  const prices = await stripe.prices.list({
-		product: planId,
-		active: true,
-		recurring: { interval: interval as 'month' | 'year' },
-	  });
-  
-	  if (!prices.data.length) {
-		return errorResponseHandler("No active prices found for this plan and interval", httpStatusCode.BAD_REQUEST, res);
-	  }
-  
-	  // Get the first matching price (or you could add more specific filtering)
-	  priceId = prices.data[0].id;
-	} catch (error) {
-	  console.error('Error fetching prices from Stripe:', error);
-	  return errorResponseHandler("Failed to fetch plan prices", httpStatusCode.BAD_REQUEST, res);
-	}
   
 	// Fetch the user
 	const user = await companyModels.findById(userId);
@@ -593,37 +704,45 @@ export const createSubscriptionService = async (company: any, payload: any, res:
 	let customer;
 	console.log('customer: ', customer);
 	if (!user.stripeCustomerId) {
-		customer = await stripe.customers.create({
-			metadata: {
-				userId,
-			},
-			email: email,
-			name: name,
+	  customer = await stripe.customers.create({
+		metadata: {
+		  userId,
+		},
+		email: email,
+		name: name,
 	  });
 	  await companyModels.findByIdAndUpdate(
-		  userId,
+		userId,
 		{ stripeCustomerId: customer.id },
 		{ new: true, upsert: true }
-	);
+	  );
 	} else {
 	  customer = await stripe.customers.retrieve(user.stripeCustomerId as string);
 	}
 	console.log('customer: ', customer);
   
 	try {
-	  // Create a Stripe Checkout session
+	  // Create a Stripe Checkout session with custom price
 	  const session = await stripe.checkout.sessions.create(
 		{
 		  customer: customer.id,
 		  line_items: [
 			{
-			  price: priceId, // Use the fetched priceId
+			  price_data: {
+				currency: 'usd', // Adjust currency as needed
+				product: planId, // Use the product ID from planIdsMap
+				unit_amount: Math.round(price * 100), // Convert to cents (Stripe expects integers)
+				recurring: {
+				  interval: interval as 'month' | 'year', // Match the interval from payload
+				},
+			  },
 			  quantity: 1,
 			},
 		  ],
 		  mode: 'subscription',
-		  success_url: process.env.STRIPE_FRONTEND_SUCCESS_CALLBACK as string, // e.g., "https://yourdomain.com/success"
-		  cancel_url: process.env.STRIPE_FRONTEND_CANCEL_CALLBACK as string, // e.g., "https://yourdomain.com/cancel"
+		  success_url: process.env.STRIPE_FRONTEND_SUCCESS_CALLBACK as string,
+		  cancel_url: process.env.STRIPE_FRONTEND_CANCEL_CALLBACK as string,
+		  allow_promotion_codes: true,
 		  metadata: {
 			userId,
 			planType,
@@ -632,6 +751,7 @@ export const createSubscriptionService = async (company: any, payload: any, res:
 			name,
 			customerId: customer.id,
 			email,
+			numberOfUsers: numberOfUsers ?? null,
 		  },
 		  subscription_data: {
 			metadata: {
@@ -642,6 +762,7 @@ export const createSubscriptionService = async (company: any, payload: any, res:
 			  name,
 			  email,
 			  customerId: customer.id,
+			  numberOfUsers: numberOfUsers ?? null,
 			},
 		  },
 		},
@@ -663,6 +784,7 @@ export const createSubscriptionService = async (company: any, payload: any, res:
 export const afterSubscriptionCreatedService = async (payload: any, transaction: mongoose.mongo.ClientSession, res: Response<any, Record<string, any>>) => {
     const sig = payload.headers['stripe-signature'];
     let checkSignature: Stripe.Event;
+	console.log("hello there after webhook");
     try {
         checkSignature = stripe.webhooks.constructEvent(payload.rawBody, sig, process.env.STRIPE_WEBHOOK_SECRET as string);
     } catch (err: any) {
@@ -685,7 +807,8 @@ export const afterSubscriptionCreatedService = async (payload: any, transaction:
 		// Fetch the subscription to get metadata
 		const subscription = await stripe.subscriptions.retrieve(subscriptionId);
 		console.log('subscription: ', subscription);
-		const { userId, planType, interval } = subscription.metadata;
+		const { userId, planType, interval ,numberOfUsers} = subscription.metadata;
+		console.log('numberOfUsers: ', numberOfUsers);
 		console.log('planType: ', planType);
 	
 		// Fetch the user
@@ -710,6 +833,7 @@ export const afterSubscriptionCreatedService = async (payload: any, transaction:
 		  subscriptionStatus: subscription.status,
 		  subscriptionExpiryDate: timestampToDateString(subscription.current_period_end),
 		  subscriptionStartDate: timestampToDateString(subscription.current_period_start),
+		  numUsersForPlan: numberOfUsers,
 		});
 	
 		return {
@@ -735,6 +859,7 @@ export const afterSubscriptionCreatedService = async (payload: any, transaction:
 					subscriptionStatus: subscription.status,
 					subscriptionExpiryDate: timestampToDateString(subscription.current_period_end),
 					subscriptionStartDate: timestampToDateString(subscription.current_period_start),
+					numUsersForPlan: metadata.numberOfUsers,
                 }, { new: true })
         }
         else {
@@ -744,6 +869,7 @@ export const afterSubscriptionCreatedService = async (payload: any, transaction:
 					subscriptionStatus: subscription.status,
 					subscriptionExpiryDate: timestampToDateString(subscription.current_period_end),
 		            subscriptionStartDate: timestampToDateString(subscription.current_period_start),
+					numUsersForPlan: metadata.numberOfUsers,
                 }, { new: true })
         }
         return {
