@@ -27,6 +27,11 @@ export const companySignupService = async (payload: any, req: any, res: Response
 		existingUser = await (schema as any).findOne({ email });
 		if (existingUser) break;
 	}
+	// Check if the company name already exists
+	const existingCompanyName = await companyModels.findOne({ companyName });
+	if (existingCompanyName) {
+		return errorResponseHandler("Company name already exists", httpStatusCode.CONFLICT, res);
+	}
 	const joinRequest = await companyJoinRequestsModel.find({ companyId: existingUser?._id });
 	if (existingUser && existingUser.role !== "company") {
 		return errorResponseHandler("User email already exists", httpStatusCode.CONFLICT, res);
@@ -123,15 +128,13 @@ export const companyCreateService = async (payload: any, req: any, res: Response
 	}
 
 	let existingUser = null;
-for (const schema of schemas) {
-  existingUser = await (schema as any).findOne({
-    $or: [{ email }, { companyName }],
-  });
-  if (existingUser) break;
-}
+	for (const schema of schemas) {
+		existingUser = await (schema as any).findOne({ email });
+		if (existingUser) break;
+	}
 
 	if (existingUser) {
-		return errorResponseHandler("company detail already exists", httpStatusCode.CONFLICT, res);
+		return errorResponseHandler("email already exists", httpStatusCode.CONFLICT, res);
 	}
 
 	// Check if the company name already exists
