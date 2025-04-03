@@ -330,11 +330,29 @@ export const AnalyticsService = async ( res: Response) => {
 };
 
 export const getAdminDetailService = async(req :any, res: Response)=>{
-  const admin = await adminModel.findOne({_id: req.user._id});
+  const admin = await adminModel.findOne({_id: req.currentUser});
   if(!admin) return errorResponseHandler("Admin not found", httpStatusCode.NOT_FOUND, res);
   return {
     success: true,
     message: "Admin fetched successfully",
     data: admin
+  }
+}
+export const updateAdminService = async(req :any, res: Response)=>{
+  const updatedAdmin = await adminModel.findByIdAndUpdate(req.currentUser, {...req.body}, {new: true});
+  if(!updatedAdmin) return errorResponseHandler("Admin not found", httpStatusCode.NOT_FOUND, res);
+  return {
+    success: true,
+    message: "Admin updated successfully",
+    data: updatedAdmin
+  }
+}
+export const updateAdminProfilepicService = async(req :any, res: Response)=>{
+  const updatedAdmin = await adminModel.findByIdAndUpdate(req.currentUser, {profilePic: req.profileImage}, {new: true});
+  if(!updatedAdmin) return errorResponseHandler("Admin not found", httpStatusCode.NOT_FOUND, res);
+  return {
+    success: true,
+    message: "Admin profile picture updated successfully",
+    data: updatedAdmin
   }
 }

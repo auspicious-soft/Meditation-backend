@@ -1,5 +1,5 @@
 import { Router } from "express";
-import {  deleteAUser, forgotPassword, getAllUsers, getAnalytics, getAUserById, getDashboardStats,  login,  newPassswordAfterOTPVerified, updateAUser,} from "../controllers/admin/admin";
+import {  deleteAUser, forgotPassword, getAdminDetail, getAllUsers, getAnalytics, getAUserById, getDashboardStats,  login,  newPassswordAfterOTPVerified, updateAdmin, updateAdminProfilepic, updateAUser,} from "../controllers/admin/admin";
 // import { checkAdminAuth } from "../middleware/check-auth";
 import { upload } from "../configF/multer";
 import { checkMulter } from "../lib/errors/error-response-handler"
@@ -16,7 +16,10 @@ import { createCompanyJoinRequest, deleteCompanyJoinRequest, getAllCompanyJoinRe
 import { createFAQ, deleteFAQ, getAllFAQ, getFAQById, updateFAQ } from "src/controllers/FAQs/FAQs-controller";
 
 const router = Router();
- 
+
+router.get("/",getAdminDetail)
+router.put("/",updateAdmin)
+router.patch("/profile/pic",updateAdminProfilepic)
 router.post("/upload-audio",uploadAudio)
 router.post("/upload-collection",createCollection)
 router.post("/create-company", createCompany);
