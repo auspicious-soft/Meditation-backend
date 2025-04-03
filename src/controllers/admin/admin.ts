@@ -11,6 +11,8 @@ import {
   getDashboardStatsService,
   AnalyticsService,
   getAdminDetailService,
+  updateAdminService,
+  updateAdminProfilepicService,
 } from "../../services/admin/admin-service";
 import { errorParser } from "../../lib/errors/error-response-handler";
 import { httpStatusCode } from "../../lib/constant";
@@ -141,6 +143,28 @@ export const getAnalytics = async (req: Request, res: Response) => {
 export const getAdminDetail = async (req: Request, res: Response) => {
   try {
     const response = await getAdminDetailService(req,res);
+    return res.status(httpStatusCode.OK).json(response);
+  } catch (error: any) {
+    const { code, message } = errorParser(error);
+    return res
+      .status(code || httpStatusCode.INTERNAL_SERVER_ERROR)
+      .json({ success: false, message: message || "An error occurred" });
+  }
+};
+export const updateAdmin = async (req: Request, res: Response) => {
+  try {
+    const response = await updateAdminService(req,res);
+    return res.status(httpStatusCode.OK).json(response);
+  } catch (error: any) {
+    const { code, message } = errorParser(error);
+    return res
+      .status(code || httpStatusCode.INTERNAL_SERVER_ERROR)
+      .json({ success: false, message: message || "An error occurred" });
+  }
+};
+export const updateAdminProfilepic = async (req: Request, res: Response) => {
+  try {
+    const response = await updateAdminProfilepicService(req,res);
     return res.status(httpStatusCode.OK).json(response);
   } catch (error: any) {
     const { code, message } = errorParser(error);

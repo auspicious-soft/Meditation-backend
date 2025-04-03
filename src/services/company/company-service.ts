@@ -27,6 +27,11 @@ export const companySignupService = async (payload: any, req: any, res: Response
 		existingUser = await (schema as any).findOne({ email });
 		if (existingUser) break;
 	}
+	// Check if the company name already exists
+	const existingCompanyName = await companyModels.findOne({ companyName });
+	if (existingCompanyName) {
+		return errorResponseHandler("Company name already exists", httpStatusCode.CONFLICT, res);
+	}
 	const joinRequest = await companyJoinRequestsModel.find({ companyId: existingUser?._id });
 	if (existingUser && existingUser.role !== "company") {
 		return errorResponseHandler("User email already exists", httpStatusCode.CONFLICT, res);
@@ -270,6 +275,7 @@ export const getCompanyByIdForAdminService = async (req: any, res: Response) => 
 	if (!company) {
 		return errorResponseHandler("Company not found", httpStatusCode.NOT_FOUND, res);
 	}
+	const users = await usersModel.countDocuments({companyName: company.companyName})
 
 	const companyData = company.toObject() as any;
 	delete companyData.password;
@@ -277,6 +283,7 @@ export const getCompanyByIdForAdminService = async (req: any, res: Response) => 
 	return {
 		success: true,
 		data: companyData,
+		users:users,
 		statusCode: httpStatusCode.OK,
 	};
 };
