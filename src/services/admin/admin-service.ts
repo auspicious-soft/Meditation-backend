@@ -341,11 +341,7 @@ export const getAdminDetailService = async(req :any, res: Response)=>{
   }
 }
 export const updateAdminService = async(req :any, res: Response)=>{
-  console.log('req:', req);
   const{firstName, lastName, email} = req.body;
-  console.log('firstName, lastName, email:', firstName, lastName, email);
-  console.log('req.body:', req.body);
-  console.log('req.currentUser:', req.currentUser);
   const updatedAdmin = await adminModel.findByIdAndUpdate(req.currentUser, {
     firstName: firstName,
     lastName: lastName,
