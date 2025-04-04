@@ -88,6 +88,7 @@ jobs:
               -e AWS_BUCKET_NAME='${{ secrets.AWS_BUCKET_NAME }}' \
               -e STRIPE_FRONTEND_SUCCESS_CALLBACK='${{ secrets.STRIPE_FRONTEND_SUCCESS_CALLBACK }}' \
               -e STRIPE_FRONTEND_CANCEL_CALLBACK='${{ secrets.STRIPE_FRONTEND_CANCEL_CALLBACK }}' \
+              -e FRONTEND_URL_VERIFY_EMAIL='${{ secrets.FRONTEND_URL_VERIFY_EMAIL }}' \
               ${{ secrets.DOCKER_USERNAME }}/meditation-backend:latest || { echo 'Docker run failed'; exit 1; }
 
             echo 'Container running successfully'

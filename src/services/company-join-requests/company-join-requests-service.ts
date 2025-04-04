@@ -5,7 +5,7 @@ import { Request } from "express";
 import { joinRequestsModel } from "src/models/user-join-requests/user-join-requests-schema";
 import { usersModel } from "src/models/user/user-schema";
 import { generatePasswordResetToken } from "src/utils/mails/token";
-import { sendUserVerificationEmail } from "src/utils/mails/mail";
+import { sendCompanyVerificationEmail, sendUserVerificationEmail } from "src/utils/mails/mail";
 import { companyJoinRequestsModel } from "src/models/company-join-requests/company-join-requests-schema";
 import { companyModels } from "src/models/company/company-schema";
 
@@ -57,7 +57,7 @@ export const updateCompanyJoinRequestService = async (id: string, payload: any, 
 		await companyModels.findByIdAndUpdate(id, { isVerifiedByAdmin: "approved" }, { new: true });
 		const EmailVerificationToken = await generatePasswordResetToken(companyData.email);
 		if (EmailVerificationToken) {
-			await sendUserVerificationEmail(companyData.email, EmailVerificationToken.token);
+			await sendCompanyVerificationEmail(companyData.email, EmailVerificationToken.token);
 		} else {
 			return errorResponseHandler("Failed to send email verification", httpStatusCode.INTERNAL_SERVER_ERROR, res);
 		}
