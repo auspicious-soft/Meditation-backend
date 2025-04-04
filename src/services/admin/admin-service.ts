@@ -348,7 +348,8 @@ export const updateAdminService = async(req :any, res: Response)=>{
   }
 }
 export const updateAdminProfilepicService = async(req :any, res: Response)=>{
-  const updatedAdmin = await adminModel.findByIdAndUpdate(req.currentUser, {profilePic: req.profileImage}, {new: true});
+  console.log('req:', req);
+  const updatedAdmin = await adminModel.findByIdAndUpdate(req.currentUser, {profilePic: req.body.profilePic}, {new: true});
   if(!updatedAdmin) return errorResponseHandler("Admin not found", httpStatusCode.NOT_FOUND, res);
   return {
     success: true,

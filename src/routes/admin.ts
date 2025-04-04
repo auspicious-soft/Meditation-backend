@@ -7,7 +7,7 @@ import { getAllBlockedUser, verifyOtpPasswordReset } from "src/controllers/user/
 import { checkAuth } from "src/middleware/check-auth";
 import { createCollection, deleteCollection, updateCollection } from "src/controllers/collection/collection-controller";
 import { deleteAudio, searchAudios, updateAudio, uploadAudio } from "src/controllers/audio/audio-controller";
-import { createCompany, deleteCompanyById, getAllCompanies, getCompanyById, getCompanyByIdForAdmin, toggleBlockedCompany } from "src/controllers/company/company";
+import { createCompany, deleteCompanyById, getAllCompanies, getCompanyById, getCompanyByIdForAdmin, toggleBlockedCompany, updateCompanyName } from "src/controllers/company/company";
 import { createBestFor, deleteBestFor, updateBestFor } from "src/controllers/bestfor/bestfor-controller";
 import { createLevel, deleteLevel, updateLevel } from "src/controllers/level/level-controller";
 import { getAllCoupons, getAllStripeProducts, getAllSubscriptionsHandler, getPrices, getSubscriptionByIdHandler, subscriptionExpireInAWeek, subscriptionExpireRemainder, updatePrices } from "src/controllers/subscription/subscription-controller";
@@ -37,6 +37,7 @@ router.put("/user/update/:id",updateAUser)
 router.put("/companies/:id/block", toggleBlockedCompany);
 router.patch("/level/:id",updateLevel)
 router.patch("/bestfor/:id",updateBestFor)
+router.patch("/update/company/name/:id",updateCompanyName)
 router.delete("/delete-collection/:id",deleteCollection)
 router.delete("/delete-company/:id", deleteCompanyById);
 router.delete("/user/delete-user/:id", deleteAUser);

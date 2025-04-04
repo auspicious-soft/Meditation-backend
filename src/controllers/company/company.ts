@@ -8,6 +8,7 @@ import {
   getCompanyByIdService,
   getCompanyDashboardService,
   toggleBlockedCompanyService,
+  updateCompanyNameService,
   updateCompanyService,
   verifyCompanyEmailService,
 } from "../../services/company/company-service";
@@ -152,6 +153,18 @@ export const toggleBlockedCompany = async (req: Request, res: Response) => {
     return res.status(code || httpStatusCode.INTERNAL_SERVER_ERROR).json({
       success: false,
       message: message || "An error occurred while deleting the company",
+    });
+  }
+}
+export const updateCompanyName = async (req: Request, res: Response) => {
+  try {
+    const response = await updateCompanyNameService(req, res);
+    return res.status(httpStatusCode.OK).json(response);
+  } catch (error: any) {
+    const { code, message } = errorParser(error);
+    return res.status(code || httpStatusCode.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message: message || "An error occurred while updating the company",
     });
   }
 }

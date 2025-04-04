@@ -514,3 +514,40 @@ export const getSubscriptionsByCustomer = async (customerId: string) => {
 		throw new Error("Failed to retrieve customer subscriptions");
 	}
 };
+
+export const updateCompanyNameService = async(req: any, res: Response) => {
+	const { companyName } = req.body;
+	const { id } = req.params;
+
+	if (!companyName || companyName.trim() === "") {
+		return errorResponseHandler("Company name is required", httpStatusCode.BAD_REQUEST, res);
+	}
+
+	const existingCompany = await companyModels.findById(id);
+	if (!existingCompany) {
+		return errorResponseHandler("Company not found", httpStatusCode.NOT_FOUND, res);
+	}
+	const company = await companyModels.find({companyName: companyName});
+	if (company.length > 0) {
+		return errorResponseHandler("Company name already exists", httpStatusCode.CONFLICT, res);
+	}
+
+	const updatedCompany = await companyModels.findByIdAndUpdate(
+		existingCompany._id,
+		{ companyName },
+		{ new: true }
+	);
+
+	if (!updatedCompany) {
+		return errorResponseHandler("Failed to update the company name", httpStatusCode.INTERNAL_SERVER_ERROR, res);
+	}
+
+	const companyData = updatedCompany.toObject() as any;
+	delete companyData.password;
+
+	return {
+		success: true,
+		message: "Company name updated successfully",
+		data: companyData,
+	};
+}
