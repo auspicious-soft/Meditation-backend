@@ -65,8 +65,74 @@ export const sendUserVerificationEmail = async (email: string, verificationCode:
   }
 
 }
+export const sendCompanyVerificationEmail = async (
+  email: string,
+  verificationCode: string
+) => {
+  try {
+    console.log("Sending verification email with payload:", {
+      email,
+      verificationCode,
+    });
 
+    const frontendURL = process.env.FRONTEND_URL_VERIFY_EMAIL || "https://panel.inscape.life/verifyotp";
 
+    return await resend.emails.send({
+      from: process.env.COMPANY_RESEND_GMAIL_ACCOUNT as string,
+      to: email,
+      subject: "Verify your email address",
+      html: `
+        <div style="font-family: sans-serif; line-height: 1.5;">
+          <h3>Verify your email address</h3>
+          <p>Please verify your email by entering the following OTP:</p>
+          <h2 style="color: #4CAF50;">${verificationCode}</h2>
+          <p>Click the button below to open the verification page:</p>
+          <a href="${frontendURL}" target="_blank" style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px;">Verify Email</a>
+          <p>Or copy and paste this link in your browser:</p>
+          <p><a href="${frontendURL}" target="_blank">${frontendURL}</a></p>
+          <p>Thank you for signing up!</p>
+        </div>
+      `,
+    });
+  } catch (error) {
+    console.error("Error sending verification email:", error);
+    throw new Error("Failed to send verification email.");
+  }
+};
+
+// export const sendCompanyVerificationEmail = async (
+//   email: string,
+//   verificationCode: string
+// ) => {
+//   try {
+//     console.log("Sending verification email with payload:", {
+//       email,
+//       verificationCode,
+//     });
+
+//     const frontendURL = process.env.FRONTEND_URL || "https://panel.inscape.life/verifyotp";
+//     // const verificationLink = `${frontendURL}/verify-email?email=${encodeURIComponent(email)}&code=${encodeURIComponent(verificationCode)}`;
+//     // console.log('verificationLink: ', verificationLink);
+
+//     return await resend.emails.send({
+//       from: process.env.COMPANY_RESEND_GMAIL_ACCOUNT as string,
+//       to: email,
+//       subject: "Verify your email address",
+//       html: `
+//         <h3>Verify your email address</h3>
+//         <p>Please verify your email address by entering the following verification code:</p>
+//         <h2>${verificationCode}</h2>
+//         <p>Or click the link below to verify automatically:</p>
+//         <a href="${frontendURL}" target="_blank">${frontendURL}</a>
+//         <p>Thank you for signing up!</p>
+//       `,
+//     });
+//   } catch (error) {
+//     console.error("Error sending verification email:", error);
+//     throw new Error("Failed to send verification email.");
+//   }
+// };
+ 
 export const subscriptionExpireReminder = async (payload: any) => {
   await resend.emails.send({
       from: process.env.COMPANY_RESEND_GMAIL_ACCOUNT as string,

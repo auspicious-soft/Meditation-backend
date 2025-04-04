@@ -681,7 +681,9 @@ export const createSubscriptionService = async (company: any, payload: any, res:
 	  numberOfUsers?: number; // Optional numberOfUsers property
 	} = payload;
 	console.log('numberOfUsers: ', numberOfUsers);
-  
+  if(process.env.STRIPE_FRONTEND_SUCCESS_CALLBACK === undefined){
+	return errorResponseHandler("STRIPE_FRONTEND_SUCCESS_CALLBACK not defined", httpStatusCode.BAD_REQUEST, res);
+  }
 	// Validate inputs
 	if (!planType || !userId || !price) 
 	  return errorResponseHandler("Invalid request: planType, userId, and price are required", httpStatusCode.BAD_REQUEST, res);
