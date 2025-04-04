@@ -345,7 +345,8 @@ export const updateAdminService = async(req :any, res: Response)=>{
   const updatedAdmin = await adminModel.findByIdAndUpdate(req.currentUser, {
     firstName: firstName,
     lastName: lastName,
-    email: email
+    email: email,
+    fullName:firstName + " " + lastName
   }, {new: true});
   if(!updatedAdmin) return errorResponseHandler("Admin not found", httpStatusCode.NOT_FOUND, res);
   return {
