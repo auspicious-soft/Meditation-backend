@@ -29,6 +29,43 @@ export const sendCompanyCreationEmail = async (email: string, companyName: strin
     `,
   });
 };
+// export const sendCompanySignupEmail = async (email: string, companyName: string) => {
+//   return await resend.emails.send({
+//     from: process.env.COMPANY_RESEND_GMAIL_ACCOUNT as string,
+//     to: email,
+//     subject: "Registration Successful!",
+//     html: `
+//       <h3>Welcome to our platform, ${companyName}!</h3>
+//       <p>Your company has been registered successfully. Thank you for choosing us!</p>
+//       <p>If you do not receive an approval email within 48 hours, please contact us.</p>
+//       <p>Below are your login credentials:</p>
+
+//       <p>If you need any assistance, feel free to <a href="mailto:support@inscape.life">Contact Us</a>.</p>
+//     `,
+//   });
+// };
+export const sendCompanySignupEmail = async (email: string, companyName: string) => {
+  return await resend.emails.send({
+    from: process.env.COMPANY_RESEND_GMAIL_ACCOUNT as string,
+    to: email,
+    subject: "Registration Successful!",
+    html: `
+      <div style="font-family: Arial, sans-serif; color: #333; line-height: 1.6; padding: 20px;">
+        <h3 style="color: #4CAF50;">Welcome to our platform, ${companyName}!</h3>
+        <p>We are excited to have you onboard. Your company has been successfully added, and we appreciate you choosing us!</p>
+        
+
+        <p>If you do not receive an approval email within 48 hours, please <a href="mailto:support@inscape.life" style="color: #1E88E5;">contact us</a>.</p>
+
+        <p>Thank you for being part of our platform. We look forward to supporting you!</p>
+
+        <footer style="margin-top: 30px; font-size: 12px; color: #777;">
+          <p>If you have any questions, feel free to reach out to us at <a href="mailto:support@inscape.life" style="color: #1E88E5;">support@inscape.life</a>.</p>
+        </footer>
+      </div>
+    `,
+  });
+};
 
 export const sendUserSignupEmail = async (email: string, firstName: string) => {
   return await resend.emails.send({

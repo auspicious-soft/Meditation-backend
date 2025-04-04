@@ -4,6 +4,7 @@ import { errorResponseHandler } from "src/lib/errors/error-response-handler";
 import {  sendWelcomeEmail } from "src/utils/mails/mail";
 import { companyJoinRequestsModel } from "src/models/company-join-requests/company-join-requests-schema";
 import { companyModels } from "src/models/company/company-schema";
+import stripe from "src/configF/stripe";
 
 export const createCompanyJoinRequestService = async (payload: any) => {
 	// Check if a join request already exists for the userId with a status other than "Rejected"
@@ -50,9 +51,26 @@ export const updateCompanyJoinRequestService = async (id: string, payload: any, 
 		await companyModels.findByIdAndUpdate(id, { isVerifiedByAdmin: "rejected" }, { new: true });
 	} else if (payload.status === "approve") {
 		updatedJoinRequest = await companyJoinRequestsModel.findOneAndUpdate({companyId : id}, { status: "Approved" }, { new: true });
-		await companyModels.findByIdAndUpdate(id, { isVerifiedByAdmin: "approved",emailVerified: true }, { new: true });
+		const company =await companyModels.findByIdAndUpdate(id, { isVerifiedByAdmin: "approved",emailVerified: true }, { new: true });
 			await sendWelcomeEmail(companyData.email,companyData.companyName );
+			if (!company) return errorResponseHandler("Company not found", httpStatusCode.NOT_FOUND, res);
 		
+			// Create a Stripe customer
+			let stripeCustomer;
+			try {
+				stripeCustomer = await stripe.customers.create({
+					email: company.email,
+					name: company.companyName,
+					description: `Stripe customer for ${company.companyName}`,
+				});
+			} catch (error) {
+				console.error("Error creating Stripe customer:", error);
+				return errorResponseHandler("Failed to create Stripe customer", httpStatusCode.INTERNAL_SERVER_ERROR, res);
+			}
+		
+			// Update the company with the Stripe customer ID
+			company.stripeCustomerId = stripeCustomer.id;
+			await company.save();
 	}
 	return { success: true, data: updatedJoinRequest };
 };
