@@ -12,24 +12,12 @@ export const httpStatusCode = {
 
 
 export const planIdsMap = {
-    'bronzePlan': process.env.STRIPE_PRODUCT_BRONZE_PLAN as string,
-    'silverPlan': process.env.STRIPE_PRODUCT_SILVER_PLAN as string,
-    'goldPlan': process.env.STRIPE_PRODUCT_GOLD_PLAN as string
+    'monthly': process.env.STRIPE_PRODUCT_MONTHLY_PLAN as string,
+    'yearly': process.env.STRIPE_PRODUCT_YEARLY_PLAN as string,
+    'lifetime': process.env.STRIPE_PRODUCT_LIFETIME_PLAN as string
 }
 
 export const yearlyPriceIdsMap = {
     'intro': process.env.STRIPE_YEARLY_PRICE_INTRO as string,
     'pro': process.env.STRIPE_YEARLY_PRICE_PRO as string
-}
-
-
-export const creditCounts = {
-    'free': 24,
-    'intro': 90,
-    'pro': 180
-}
-
-export const yearlyCreditCounts = {
-    'intro': 1080,
-    'pro': 2160
 }

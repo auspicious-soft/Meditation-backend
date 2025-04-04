@@ -65,38 +65,44 @@ export const sendUserVerificationEmail = async (email: string, verificationCode:
   }
 
 }
-export const sendCompanyVerificationEmail = async (
+export const sendWelcomeEmail = async (
   email: string,
-  verificationCode: string
+  clientFirstName: string,
+  // platformName: string,
+  // supportLink: string
 ) => {
   try {
-    console.log("Sending verification email with payload:", {
-      email,
-      verificationCode,
-    });
 
-    const frontendURL = process.env.FRONTEND_URL_VERIFY_EMAIL || "https://panel.inscape.life/verifyotp";
+    const frontendURL = process.env.FRONTEND_URL || "https://panel.inscape.life";
 
     return await resend.emails.send({
       from: process.env.COMPANY_RESEND_GMAIL_ACCOUNT as string,
       to: email,
-      subject: "Verify your email address",
+      subject: `🎉 Welcome to Inscape – Let’s Build Something Great!`,
       html: `
         <div style="font-family: sans-serif; line-height: 1.5;">
-          <h3>Verify your email address</h3>
-          <p>Please verify your email by entering the following OTP:</p>
-          <h2 style="color: #4CAF50;">${verificationCode}</h2>
-          <p>Click the button below to open the verification page:</p>
-          <a href="${frontendURL}" target="_blank" style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px;">Verify Email</a>
-          <p>Or copy and paste this link in your browser:</p>
-          <p><a href="${frontendURL}" target="_blank">${frontendURL}</a></p>
-          <p>Thank you for signing up!</p>
+          <h3>Hi ${clientFirstName},</h3>
+          <p>Welcome aboard! 🎉</p>
+          <p>We’re thrilled to have you join the Inscape family.</p>
+          <p>Our mission is to help you <strong>find inner peace</strong>, <strong>reduce stress</strong>, and <strong>improve your mindfulness</strong> through guided meditation. You're now part of a community that’s passionate about living a more balanced and fulfilled life.</p>
+          <p>Here’s what to expect next:</p>
+          <ul>
+            <li>✅ A smooth setup experience</li>
+            <li>✅ Personalized support whenever you need it</li>
+            <li>✅ Powerful tools designed to help you meditate and unwind</li>
+          </ul>
+          <p>If you ever have questions or need a hand, don’t hesitate to reach out. We’re here for you every step of the way.</p>
+          <p>Let’s get started!</p>
+          <p><strong>Access your account:</strong> <a href="${frontendURL}" target="_blank" style="color: #4CAF50;">Login here</a> to start your meditation journey.</p>
+          <p>Warm regards,</p>
+          <p><strong>Dan</strong><br>Founder, Inscape</p>
+          <a href="mailto:${process.env.COMPANY_RESEND_GMAIL_ACCOUNT}" style="color: #4CAF50;">${process.env.COMPANY_RESEND_GMAIL_ACCOUNT}</a>.</p>
         </div>
       `,
     });
   } catch (error) {
-    console.error("Error sending verification email:", error);
-    throw new Error("Failed to send verification email.");
+    console.error("Error sending welcome email:", error);
+    throw new Error("Failed to send welcome email.");
   }
 };
 

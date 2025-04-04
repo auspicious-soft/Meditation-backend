@@ -15,9 +15,9 @@ configDotenv();
 
 // Define TypeScript interfaces for better type safety
 interface PriceUpdateRequest {
-	silverPrice: number;
-	bronzePrice: number;
-	goldPrice: number;
+	monthlyPrice: number;
+	yearlyPrice: number;
+	lifeTimePrice: number;
 }
 interface PriceIdConfig {
     stayRooted: {
@@ -38,9 +38,12 @@ const priceIds: PriceIdConfig = {
     }
 }
 
-const silverProductId = process.env.STRIPE_PRODUCT_SILVER_PLAN;
-const bronzeProductId = process.env.STRIPE_PRODUCT_BRONZE_PLAN;
-const goldProductId = process.env.STRIPE_PRODUCT_GOLD_PLAN;
+// const silverProductId = process.env.STRIPE_PRODUCT_SILVER_PLAN;
+// const bronzeProductId = process.env.STRIPE_PRODUCT_BRONZE_PLAN;
+// const goldProductId = process.env.STRIPE_PRODUCT_GOLD_PLAN;
+const monthlyProductId = process.env.STRIPE_PRODUCT_MONTHLY_PLAN;
+const yearlyProductId = process.env.STRIPE_PRODUCT_YEARLY_PLAN;
+const lifeTimeProductId = process.env.STRIPE_PRODUCT_LIFETIME_PLAN;
 
 
   export const getAllProductsForCompanyService = async (company: any, filter?: string) => {
@@ -213,152 +216,232 @@ export const getAllProductsService = async (filter?: string) => {
 };
 
 
-export const updatePricesService = async (data: PriceUpdateRequest)=> {
-	// console.log('data: ', data);
+interface ProductUpdateRequest {
+	productId: string; // e.g., "prod_S49Zb6vQYcT0lY"
+	description: string; // New description for the product
+	price: number; // New price in dollars (e.g., 19.99)
+  }
+  
+  export const updatePricesService = async (data: ProductUpdateRequest) => {
 	try {
-		// Validate environment variables for product IDs
-		if (!silverProductId || !bronzeProductId || !goldProductId) {
-			throw new Error("Missing required Stripe product IDs in environment variables");
-		}
-
-		// **Update Silver Plan**
-		const silverProduct = await stripe.products.retrieve(silverProductId);
-		let silverPriceId: string | undefined;
-		if (silverProduct.default_price) {
-			const defaultPrice = await stripe.prices.retrieve(silverProduct.default_price as string);
-			if (defaultPrice.unit_amount !== data.silverPrice * 100) {
-				// Price differs, create a new one and set as default
-				const newPrice = await stripe.prices.create({
-					unit_amount: data.silverPrice * 100,
-					currency: "usd",
-					product: silverProductId,
-					nickname: "Silver Plan",
-					recurring: { interval: "month" },
-				});
-				await stripe.products.update(silverProductId, {
-					default_price: newPrice.id,
-				});
-				silverPriceId = newPrice.id;
-
-				// Archive all other active prices
-				const prices = await stripe.prices.list({ product: silverProductId });
-				for (const price of prices.data) {
-					if (price.id !== silverPriceId && price.active) {
-						await stripe.prices.update(price.id, { active: false });
-					}
-				}
-			} else {
-				// Price is the same, use the existing default price
-				silverPriceId = silverProduct.default_price as string;
+	  // Retrieve the existing product
+	  const product = await stripe.products.retrieve(data.productId);
+	  console.log('product: ', product);
+  
+	  // Update the product description
+	  await stripe.products.update(data.productId, {
+		description: data.description,
+	  });
+  
+	  let priceId: string | undefined;
+  
+	  // Check if the product has a default price
+	  if (product.default_price) {
+		const defaultPrice = await stripe.prices.retrieve(product.default_price as string);
+  
+		// Compare the existing price with the new price (convert to cents)
+		if (defaultPrice.unit_amount !== data.price * 100) {
+		  // Price differs, create a new price and set it as default
+		  const newPrice = await stripe.prices.create({
+			unit_amount: data.price * 100, // Convert to cents
+			currency: "usd",
+			product: data.productId,
+			nickname: product.name || "Updated Plan", // Use existing product name or a default
+			// recurring: defaultPrice.recurring || undefined, // Preserve recurring settings if they exist
+		  });
+  
+		  // Set the new price as the default
+		  await stripe.products.update(data.productId, {
+			default_price: newPrice.id,
+		  });
+		  priceId = newPrice.id;
+  
+		  // Archive all other active prices
+		  const prices = await stripe.prices.list({ product: data.productId });
+		  for (const price of prices.data) {
+			if (price.id !== priceId && price.active) {
+			  await stripe.prices.update(price.id, { active: false });
 			}
+		  }
 		} else {
-			// No default price, create a new one and set as default
-			const newPrice = await stripe.prices.create({
-				unit_amount: data.silverPrice * 100,
-				currency: "usd",
-				product: silverProductId,
-				nickname: "Silver Plan",
-				recurring: { interval: "month" },
-			});
-			await stripe.products.update(silverProductId, {
-				default_price: newPrice.id,
-			});
-			silverPriceId = newPrice.id;
+		  // Price is the same, keep the existing price
+		  priceId = product.default_price as string;
 		}
-
-		// **Update Bronze Plan**
-		const bronzeProduct = await stripe.products.retrieve(bronzeProductId);
-		let bronzePriceId: string | undefined;
-		if (bronzeProduct.default_price) {
-			const defaultPrice = await stripe.prices.retrieve(bronzeProduct.default_price as string);
-			if (defaultPrice.unit_amount !== data.bronzePrice * 100) {
-				const newPrice = await stripe.prices.create({
-					unit_amount: data.bronzePrice * 100,
-					currency: "usd",
-					product: bronzeProductId,
-					nickname: "Bronze Plan",
-					recurring: { interval: "month" },
-				});
-				await stripe.products.update(bronzeProductId, {
-					default_price: newPrice.id,
-				});
-				bronzePriceId = newPrice.id;
-
-				const prices = await stripe.prices.list({ product: bronzeProductId });
-				for (const price of prices.data) {
-					if (price.id !== bronzePriceId && price.active) {
-						await stripe.prices.update(price.id, { active: false });
-					}
-				}
-			} else {
-				bronzePriceId = bronzeProduct.default_price as string;
-			}
-		} else {
-			const newPrice = await stripe.prices.create({
-				unit_amount: data.bronzePrice * 100,
-				currency: "usd",
-				product: bronzeProductId,
-				nickname: "Bronze Plan",
-				recurring: { interval: "month" },
-			});
-			await stripe.products.update(bronzeProductId, {
-				default_price: newPrice.id,
-			});
-			bronzePriceId = newPrice.id;
-		}
-
-		// **Update Gold Plan**
-		const goldProduct = await stripe.products.retrieve(goldProductId);
-		let goldPriceId: string | undefined;
-		if (goldProduct.default_price) {
-			const defaultPrice = await stripe.prices.retrieve(goldProduct.default_price as string);
-			if (defaultPrice.unit_amount !== data.goldPrice * 100) {
-				const newPrice = await stripe.prices.create({
-					unit_amount: data.goldPrice * 100,
-					currency: "usd",
-					product: goldProductId,
-					nickname: "Gold Plan",
-					recurring: { interval: "month" },
-				});
-				await stripe.products.update(goldProductId, {
-					default_price: newPrice.id,
-				});
-				goldPriceId = newPrice.id;
-
-				const prices = await stripe.prices.list({ product: goldProductId });
-				for (const price of prices.data) {
-					if (price.id !== goldPriceId && price.active) {
-						await stripe.prices.update(price.id, { active: false });
-					}
-				}
-			} else {
-				goldPriceId = goldProduct.default_price as string;
-			}
-		} else {
-			const newPrice = await stripe.prices.create({
-				unit_amount: data.goldPrice * 100,
-				currency: "usd",
-				product: goldProductId,
-				nickname: "Gold Plan",
-				recurring: { interval: "month" },
-			});
-			await stripe.products.update(goldProductId, {
-				default_price: newPrice.id,
-			});
-			goldPriceId = newPrice.id;
-		}
-
-		return {
-			message: "Prices updated successfully",
-			silverPriceId,
-			bronzePriceId,
-			goldPriceId,
-		};
+	  } else {
+		// No default price exists, create a new one
+		const newPrice = await stripe.prices.create({
+		  unit_amount: data.price * 100,
+		  currency: "usd",
+		  product: data.productId,
+		  nickname: product.name || "Updated Plan",
+		  recurring: { interval: "month" }, // Default to monthly; adjust as needed
+		});
+  
+		// Set the new price as the default
+		await stripe.products.update(data.productId, {
+		  default_price: newPrice.id,
+		});
+		priceId = newPrice.id;
+	  }
+  
+	  return {
+		message: "Product description and price updated successfully",
+		productId: data.productId,
+		priceId,
+	  };
 	} catch (error) {
-		console.log("Error updating prices:", error);
-		throw new Error(`Failed to update prices: ${(error as Error).message}`);
+	  console.log("Error updating product:", error);
+	  throw new Error(`Failed to update product: ${(error as Error).message}`);
 	}
-};
+  };
+
+
+// export const updatePricesService = async (data: PriceUpdateRequest)=> {
+// 	// console.log('data: ', data);
+// 	try {
+// 		// Validate environment variables for product IDs
+// 		if ( !monthlyProductId || !yearlyProductId || !lifeTimeProductId) {
+// 			throw new Error("Missing required Stripe product IDs in environment variables");
+// 		}
+
+// 		// **Update Silver Plan**
+// 		const monthlyProduct = await stripe.products.retrieve(monthlyProductId);
+// 		let monthlyPriceId: string | undefined;
+// 		if (monthlyProduct.default_price) {
+// 			const defaultPrice = await stripe.prices.retrieve(monthlyProduct.default_price as string);
+// 			if (defaultPrice.unit_amount !== data.monthlyPrice * 100) {
+// 				// Price differs, create a new one and set as default
+// 				const newPrice = await stripe.prices.create({
+// 					unit_amount: data.monthlyPrice * 100,
+// 					currency: "usd",
+// 					product: monthlyPriceId,
+// 					nickname: "Monthly Plan",
+// 					recurring: { interval: "month" },
+// 				});
+// 				await stripe.products.update(monthlyProductId, {
+// 					default_price: newPrice.id,
+// 				});
+// 				monthlyPriceId = newPrice.id;
+
+// 				// Archive all other active prices
+// 				const prices = await stripe.prices.list({ product: monthlyProductId });
+// 				for (const price of prices.data) {
+// 					if (price.id !== monthlyPriceId && price.active) {
+// 						await stripe.prices.update(price.id, { active: false });
+// 					}
+// 				}
+// 			} else {
+// 				// Price is the same, use the existing default price
+// 				monthlyPriceId = monthlyProduct.default_price as string;
+// 			}
+// 		} else {
+// 			// No default price, create a new one and set as default
+// 			const newPrice = await stripe.prices.create({
+// 				unit_amount: data.monthlyPrice * 100,
+// 				currency: "usd",
+// 				product: monthlyProductId,
+// 				nickname: "Monthly Plan",
+// 				recurring: { interval: "month" },
+// 			});
+// 			await stripe.products.update(monthlyProductId, {
+// 				default_price: newPrice.id,
+// 			});
+// 			monthlyPriceId = newPrice.id;
+// 		}
+
+// 		// **Update Bronze Plan**
+// 		const bronzeProduct = await stripe.products.retrieve(yearlyProductId);
+// 		let yearlyPriceId: string | undefined;
+// 		if (bronzeProduct.default_price) {
+// 			const defaultPrice = await stripe.prices.retrieve(bronzeProduct.default_price as string);
+// 			if (defaultPrice.unit_amount !== data.yearlyPrice * 100) {
+// 				const newPrice = await stripe.prices.create({
+// 					unit_amount: data.yearlyPrice * 100,
+// 					currency: "usd",
+// 					product: yearlyProductId,
+// 					nickname: "Yearly Plan",
+// 					recurring: { interval: "month" },
+// 				});
+// 				await stripe.products.update(yearlyProductId, {
+// 					default_price: newPrice.id,
+// 				});
+// 				yearlyPriceId = newPrice.id;
+
+// 				const prices = await stripe.prices.list({ product: yearlyProductId });
+// 				for (const price of prices.data) {
+// 					if (price.id !== yearlyPriceId && price.active) {
+// 						await stripe.prices.update(price.id, { active: false });
+// 					}
+// 				}
+// 			} else {
+// 				yearlyPriceId = bronzeProduct.default_price as string;
+// 			}
+// 		} else {
+// 			const newPrice = await stripe.prices.create({
+// 				unit_amount: data.yearlyPrice * 100,
+// 				currency: "usd",
+// 				product: yearlyProductId,
+// 				nickname: "Bronze Plan",
+// 				recurring: { interval: "month" },
+// 			});
+// 			await stripe.products.update(yearlyProductId, {
+// 				default_price: newPrice.id,
+// 			});
+// 			yearlyPriceId = newPrice.id;
+// 		}
+
+// 		// **Update Gold Plan**
+// 		const lifeTimeProduct = await stripe.products.retrieve(lifeTimeProductId);
+// 		let lifeTimePriceId: string | undefined;
+// 		if (lifeTimeProduct.default_price) {
+// 			const defaultPrice = await stripe.prices.retrieve(lifeTimeProduct.default_price as string);
+// 			if (defaultPrice.unit_amount !== data.lifeTimePrice * 100) {
+// 				const newPrice = await stripe.prices.create({
+// 					unit_amount: data.lifeTimePrice * 100,
+// 					currency: "usd",
+// 					product: lifeTimeProductId,
+// 					nickname: "LifeTime Plan",
+// 					recurring: { interval: "month" },
+// 				});
+// 				await stripe.products.update(lifeTimeProductId, {
+// 					default_price: newPrice.id,
+// 				});
+// 				lifeTimePriceId = newPrice.id;
+
+// 				const prices = await stripe.prices.list({ product: lifeTimeProductId });
+// 				for (const price of prices.data) {
+// 					if (price.id !== lifeTimePriceId && price.active) {
+// 						await stripe.prices.update(price.id, { active: false });
+// 					}
+// 				}
+// 			} else {
+// 				lifeTimePriceId = lifeTimeProduct.default_price as string;
+// 			}
+// 		} else {
+// 			const newPrice = await stripe.prices.create({
+// 				unit_amount: data.lifeTimePrice * 100,
+// 				currency: "usd",
+// 				product: lifeTimeProductId,
+// 				nickname: "LifeTime Plan",
+// 				recurring: { interval: "month" },
+// 			});
+// 			await stripe.products.update(lifeTimeProductId, {
+// 				default_price: newPrice.id,
+// 			});
+// 			lifeTimePriceId = newPrice.id;
+// 		}
+
+// 		return {
+// 			message: "Prices updated successfully",
+// 			lifeTimePriceId,
+// 			yearlyPriceId,
+// 			monthlyPriceId,
+// 		};
+// 	} catch (error) {
+// 		console.log("Error updating prices:", error);
+// 		throw new Error(`Failed to update prices: ${(error as Error).message}`);
+// 	}
+// };
 
 export const getPricesService = async () => {
 	try {
@@ -661,6 +744,128 @@ export const getCompanyTransactionsService = async (company: any, res: Response)
 // 	}
 //   };
 
+// export const createSubscriptionService = async (company: any, payload: any, res: Response) => {
+// 	const idempotencyKey = uuidv4();
+// 	const userId = company.id;
+// 	const { 
+// 	  planType, 
+// 	  interval = 'month', 
+// 	  email, 
+// 	  name, 
+// 	  numberOfUsers,
+// 	  price, // Add price to the payload
+	  
+	
+// 	}: { 
+// 	  planType: keyof typeof planIdsMap; 
+// 	  interval?: string; 
+// 	  email: string; 
+// 	  name: string; 
+// 	  price: number; // Price from frontend
+// 	  numberOfUsers?: number; // Optional numberOfUsers property
+// 	} = payload;
+// 	console.log('payload: ', payload);
+
+// 	// Validate inputs
+// 	if (!planType || !userId || !price) 
+// 	  return errorResponseHandler("Invalid request: planType, userId, and price are required", httpStatusCode.BAD_REQUEST, res);
+	
+// 	const isPlanType = (type: string): boolean => ['monthly', 'yearly', 'lifetime'].includes(type);
+// 	if (!isPlanType(planType as string)) 
+// 	  return errorResponseHandler("Invalid plan type", httpStatusCode.BAD_REQUEST, res);
+  
+// 	// Validate price
+// 	if (typeof price !== 'number' || price <= 0) 
+// 	  return errorResponseHandler("Invalid price: must be a positive number", httpStatusCode.BAD_REQUEST, res);
+  
+// 	const planId = planIdsMap[planType];
+  
+// 	// Fetch the user
+// 	const user = await companyModels.findById(userId);
+// 	if (!user) return errorResponseHandler("User not found", httpStatusCode.NOT_FOUND, res);
+  
+// 	// Create or retrieve Stripe customer
+// 	let customer;
+// 	console.log('customer: ', customer);
+// 	if (!user.stripeCustomerId) {
+// 	  customer = await stripe.customers.create({
+// 		metadata: {
+// 		  userId,
+// 		},
+// 		email: email,
+// 		name: name,
+// 	  });
+// 	  await companyModels.findByIdAndUpdate(
+// 		userId,
+// 		{ stripeCustomerId: customer.id },
+// 		{ new: true, upsert: true }
+// 	  );
+// 	} else {
+// 	  customer = await stripe.customers.retrieve(user.stripeCustomerId as string);
+// 	}
+// 	console.log('customer: ', customer);
+  
+// 	try {
+// 	  // Create a Stripe Checkout session with custom price
+// 	  const session = await stripe.checkout.sessions.create(
+// 		{
+// 		  customer: customer.id,
+// 		  line_items: [
+// 			{
+// 			  price_data: {
+// 				currency: 'usd', // Adjust currency as needed
+// 				product: planId, // Use the product ID from planIdsMap
+// 				unit_amount: Math.round(price * 100), // Convert to cents (Stripe expects integers)
+// 				recurring: {
+// 				  interval: interval as 'month' | 'year', // Match the interval from payload
+// 				},
+// 			  },
+// 			  quantity: 1,
+// 			},
+// 		  ],
+// 		  mode: 'subscription',
+// 		  success_url: process.env.STRIPE_FRONTEND_SUCCESS_CALLBACK as string,
+// 		  cancel_url: process.env.STRIPE_FRONTEND_CANCEL_CALLBACK as string,
+// 		  allow_promotion_codes: true,
+// 		  metadata: {
+// 			userId,
+// 			planType,
+// 			idempotencyKey,
+// 			interval,
+// 			name,
+// 			customerId: customer.id,
+// 			email,
+// 			numberOfUsers: numberOfUsers ?? null,
+// 		  },
+// 		  subscription_data: {
+// 			metadata: {
+// 			  userId,
+// 			  planType,
+// 			  idempotencyKey,
+// 			  interval,
+// 			  name,
+// 			  email,
+// 			  customerId: customer.id,
+// 			  numberOfUsers: numberOfUsers ?? null,
+// 			},
+// 		  },
+// 		},
+// 		{
+// 		  idempotencyKey, // Pass idempotency key to Stripe
+// 		}
+// 	  );
+  
+// 	  return {
+// 		id: session.id,
+// 		success: true,
+// 	  };
+// 	} catch (error) {
+// 	  console.error('Error creating checkout session:', error);
+// 	  return errorResponseHandler("Failed to create subscription", httpStatusCode.BAD_REQUEST, res);
+// 	}
+//   };
+
+
 export const createSubscriptionService = async (company: any, payload: any, res: Response) => {
 	const idempotencyKey = uuidv4();
 	const userId = company.id;
@@ -670,46 +875,44 @@ export const createSubscriptionService = async (company: any, payload: any, res:
 	  email, 
 	  name, 
 	  numberOfUsers,
-	  price, // Add price to the payload
-	
+	  price,
 	}: { 
 	  planType: keyof typeof planIdsMap; 
 	  interval?: string; 
 	  email: string; 
 	  name: string; 
-	  price: number; // Price from frontend
-	  numberOfUsers?: number; // Optional numberOfUsers property
+	  price: number;
+	  numberOfUsers?: number;
 	} = payload;
-	console.log('numberOfUsers: ', numberOfUsers);
-  if(process.env.STRIPE_FRONTEND_SUCCESS_CALLBACK === undefined){
-	return errorResponseHandler("STRIPE_FRONTEND_SUCCESS_CALLBACK not defined", httpStatusCode.BAD_REQUEST, res);
-  }
+	console.log('payload: ', payload);
+  
 	// Validate inputs
 	if (!planType || !userId || !price) 
 	  return errorResponseHandler("Invalid request: planType, userId, and price are required", httpStatusCode.BAD_REQUEST, res);
 	
-	const isPlanType = (type: string): boolean => ['goldPlan', 'silverPlan', 'bronzePlan'].includes(type);
+	const isPlanType = (type: string): boolean => ['monthly', 'yearly', 'lifetime'].includes(type);
 	if (!isPlanType(planType as string)) 
 	  return errorResponseHandler("Invalid plan type", httpStatusCode.BAD_REQUEST, res);
-  
-	// Validate price
+	
 	if (typeof price !== 'number' || price <= 0) 
 	  return errorResponseHandler("Invalid price: must be a positive number", httpStatusCode.BAD_REQUEST, res);
-  
+	
 	const planId = planIdsMap[planType];
+	console.log('planId:', planId); // Debug: Verify planId is correct
+  
+	if (!planId) 
+	  return errorResponseHandler("Invalid plan type: No matching product ID found", httpStatusCode.BAD_REQUEST, res);
   
 	// Fetch the user
 	const user = await companyModels.findById(userId);
 	if (!user) return errorResponseHandler("User not found", httpStatusCode.NOT_FOUND, res);
-  
+	
 	// Create or retrieve Stripe customer
 	let customer;
 	console.log('customer: ', customer);
 	if (!user.stripeCustomerId) {
 	  customer = await stripe.customers.create({
-		metadata: {
-		  userId,
-		},
+		metadata: { userId },
 		email: email,
 		name: name,
 	  });
@@ -722,57 +925,62 @@ export const createSubscriptionService = async (company: any, payload: any, res:
 	  customer = await stripe.customers.retrieve(user.stripeCustomerId as string);
 	}
 	console.log('customer: ', customer);
-  
+	
 	try {
-	  // Create a Stripe Checkout session with custom price
-	  const session = await stripe.checkout.sessions.create(
-		{
-		  customer: customer.id,
-		  line_items: [
-			{
-			  price_data: {
-				currency: 'usd', // Adjust currency as needed
-				product: planId, // Use the product ID from planIdsMap
-				unit_amount: Math.round(price * 100), // Convert to cents (Stripe expects integers)
-				recurring: {
-				  interval: interval as 'month' | 'year', // Match the interval from payload
-				},
-			  },
-			  quantity: 1,
-			},
-		  ],
-		  mode: 'subscription',
-		  success_url: process.env.STRIPE_FRONTEND_SUCCESS_CALLBACK as string,
-		  cancel_url: process.env.STRIPE_FRONTEND_CANCEL_CALLBACK as string,
-		  allow_promotion_codes: true,
-		  metadata: {
-			userId,
-			planType,
-			idempotencyKey,
-			interval,
-			name,
-			customerId: customer.id,
-			email,
-			numberOfUsers: numberOfUsers ?? null,
-		  },
-		  subscription_data: {
-			metadata: {
-			  userId,
-			  planType,
-			  idempotencyKey,
-			  interval,
-			  name,
-			  email,
-			  customerId: customer.id,
-			  numberOfUsers: numberOfUsers ?? null,
-			},
-		  },
-		},
-		{
-		  idempotencyKey, // Pass idempotency key to Stripe
-		}
-	  );
+	  const isRecurring = interval !== 'lifetime';
+	  console.log('isRecurring: ', isRecurring);
   
+	  const session = await stripe.checkout.sessions.create(
+		  {
+			  customer: customer.id,
+			  line_items: [
+				  {
+					  price_data: {
+						  currency: 'usd',
+						  product: planId, // Use the predefined product ID
+						  unit_amount: Math.round(price * 100), // Custom price from payload
+						  ...(isRecurring && {
+							  recurring: {
+								  interval: interval as 'month' | 'year',
+								},
+							}),
+						},
+						quantity: 1,
+					},
+				],
+				mode: isRecurring ? 'subscription' : 'payment',
+				success_url: process.env.STRIPE_FRONTEND_SUCCESS_CALLBACK as string,
+				cancel_url: process.env.STRIPE_FRONTEND_CANCEL_CALLBACK as string,
+				allow_promotion_codes: true,
+				metadata: {
+					userId,
+					planType,
+					idempotencyKey,
+					interval,
+					name,
+					customerId: customer.id,
+					email,
+					numberOfUsers: numberOfUsers ?? null,
+				},
+				...(isRecurring && {
+					subscription_data: {
+						metadata: {
+							userId,
+							planType,
+				idempotencyKey,
+				interval,
+				name,
+				email,
+				customerId: customer.id,
+				numberOfUsers: numberOfUsers ?? null,
+			  },
+			},
+		}),
+	},
+	{ idempotencyKey }
+);
+console.log('session: ', session);
+	
 	  return {
 		id: session.id,
 		success: true,
@@ -785,6 +993,7 @@ export const createSubscriptionService = async (company: any, payload: any, res:
 
 export const afterSubscriptionCreatedService = async (payload: any, transaction: mongoose.mongo.ClientSession, res: Response<any, Record<string, any>>) => {
     const sig = payload.headers['stripe-signature'];
+	console.log('sig: ', sig);
     let checkSignature: Stripe.Event;
 	console.log("hello there after webhook");
     try {

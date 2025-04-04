@@ -1,11 +1,7 @@
 import { Response } from "express";
 import { httpStatusCode } from "src/lib/constant";
 import { errorResponseHandler } from "src/lib/errors/error-response-handler";
-import { Request } from "express";
-import { joinRequestsModel } from "src/models/user-join-requests/user-join-requests-schema";
-import { usersModel } from "src/models/user/user-schema";
-import { generatePasswordResetToken } from "src/utils/mails/token";
-import { sendCompanyVerificationEmail, sendUserVerificationEmail } from "src/utils/mails/mail";
+import {  sendWelcomeEmail } from "src/utils/mails/mail";
 import { companyJoinRequestsModel } from "src/models/company-join-requests/company-join-requests-schema";
 import { companyModels } from "src/models/company/company-schema";
 
@@ -54,13 +50,9 @@ export const updateCompanyJoinRequestService = async (id: string, payload: any, 
 		await companyModels.findByIdAndUpdate(id, { isVerifiedByAdmin: "rejected" }, { new: true });
 	} else if (payload.status === "approve") {
 		updatedJoinRequest = await companyJoinRequestsModel.findOneAndUpdate({companyId : id}, { status: "Approved" }, { new: true });
-		await companyModels.findByIdAndUpdate(id, { isVerifiedByAdmin: "approved" }, { new: true });
-		const EmailVerificationToken = await generatePasswordResetToken(companyData.email);
-		if (EmailVerificationToken) {
-			await sendCompanyVerificationEmail(companyData.email, EmailVerificationToken.token);
-		} else {
-			return errorResponseHandler("Failed to send email verification", httpStatusCode.INTERNAL_SERVER_ERROR, res);
-		}
+		await companyModels.findByIdAndUpdate(id, { isVerifiedByAdmin: "approved",emailVerified: true }, { new: true });
+			await sendWelcomeEmail(companyData.email,companyData.companyName );
+		
 	}
 	return { success: true, data: updatedJoinRequest };
 };

@@ -495,11 +495,12 @@ export const getSubscriptionsByCustomer = async (customerId: string) => {
 		const subscriptionDetails: any[] = allSubscriptions.map((sub) => {
 			// Extract customer data (expanded via 'data.customer')
 			const customer = sub.customer as Stripe.Customer | string;
+			console.log('sub: ', sub.metadata.planType);
 			const customerData: Stripe.Customer | {} = typeof customer === "string" ? {} : customer;
 
 			return {
 				id: sub.id,
-				planName: sub.items.data[0]?.plan?.nickname || sub.items.data[0]?.plan?.id || "Unknown Plan",
+				planName: sub.metadata.planType || "Unknown Plan",
 				price: sub.items.data[0]?.plan?.amount ? sub.items.data[0].plan.amount / 100 : null,
 				username: "name" in customerData && customerData.name !== null ? customerData.name : undefined,
 				email: "email" in customerData && customerData.email !== null ? customerData.email : undefined,
