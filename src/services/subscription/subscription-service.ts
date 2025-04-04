@@ -114,17 +114,17 @@ const lifeTimeProductId = process.env.STRIPE_PRODUCT_LIFETIME_PLAN;
 		}
   
 		const companyPlanType = companyDetails[0]?.planType; // e.g., "goldPlan"
+		console.log('companyPlanType: ', companyPlanType);
 		const subscriptionExpiryDate = companyDetails[0]?.subscriptionExpiryDate; // e.g., "2025-04-20T11:07:47.000Z"
 		const subscriptionId = companyDetails[0]?.subscriptionId; // e.g., "2025-04-20T11:07:47.000Z"
   
-		// Map planType to product name (e.g., "goldPlan" -> "Gold Plan")
 		const planTypeToProductName: { [key: string]: string } = {
-		  goldplan: "Gold Plan",
-		  silverplan: "Silver Plan",
-		  bronzeplan: "Bronze Plan",
-		};
-  
+			monthly: "Monthly",
+			yearly: "Yearly",
+			lifetime: "Lifetime",
+		  };
 		const expectedProductName = planTypeToProductName[companyPlanType?.toLowerCase()];
+		console.log('expectedProductName: ', expectedProductName);
   
 		// Find the product that matches the company's planType and add currentPlan to it
 		products.forEach((product: any) => {

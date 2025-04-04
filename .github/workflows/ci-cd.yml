@@ -82,6 +82,9 @@ jobs:
               -e STRIPE_PRODUCT_BRONZE_PLAN='${{ secrets.STRIPE_PRODUCT_BRONZE_PLAN }}' \
               -e STRIPE_PRODUCT_GOLD_PLAN='${{ secrets.STRIPE_PRODUCT_GOLD_PLAN }}' \
               -e STRIPE_PRODUCT_SILVER_PLAN='${{ secrets.STRIPE_PRODUCT_SILVER_PLAN }}' \
+              -e STRIPE_PRODUCT_LIFETIME_PLAN='${{ secrets.STRIPE_PRODUCT_LIFETIME_PLAN }}' \
+              -e STRIPE_PRODUCT_YEARLY_PLAN='${{ secrets.STRIPE_PRODUCT_YEARLY_PLAN }}' \
+              -e STRIPE_PRODUCT_MONTHLY_PLAN='${{ secrets.STRIPE_PRODUCT_MONTHLY_PLAN }}' \
               -e STRIPE_SECRET_KEY='${{ secrets.STRIPE_SECRET_KEY }}' \
               -e STRIPE_WEBHOOK_SECRET='${{ secrets.STRIPE_WEBHOOK_SECRET }}' \
               -e AWS_SECRET_ACCESS_KEY='${{ secrets.AWS_SECRET_ACCESS_KEY }}' \
