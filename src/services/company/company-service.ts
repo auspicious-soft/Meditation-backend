@@ -2,7 +2,7 @@ import bcrypt from "bcryptjs";
 import e, { Response } from "express";
 import { errorResponseHandler } from "../../lib/errors/error-response-handler";
 import { httpStatusCode } from "../../lib/constant";
-import { sendCompanyCreationEmail, sendUserSignupEmail } from "src/utils/mails/mail";
+import { sendCompanyCreationEmail, sendCompanySignupEmail, sendUserSignupEmail } from "src/utils/mails/mail";
 import { companyModels } from "src/models/company/company-schema";
 import { customAlphabet } from "nanoid";
 import { queryBuilder } from "src/utils";
@@ -43,7 +43,7 @@ export const companySignupService = async (payload: any, req: any, res: Response
 		const result = await createCompanyJoinRequestService({ companyId: existingUser._id });
 		return { success: true, message: "Request sent successfully" };
 	}
-
+   
 	// Hash the password
 	const hashedPassword = await bcrypt.hash(password, 10);
 	const identifier = customAlphabet("0123456789", 5);
@@ -58,6 +58,7 @@ export const companySignupService = async (payload: any, req: any, res: Response
 
 	await newUser.save();
 	await createCompanyJoinRequestService({ companyId: newUser?._id });
+	await sendCompanySignupEmail(email, companyName);
 	const userData = newUser.toObject() as any;
 	delete userData.password;
 

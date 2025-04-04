@@ -29,6 +29,21 @@ export const sendCompanyCreationEmail = async (email: string, companyName: strin
     `,
   });
 };
+export const sendCompanySignupEmail = async (email: string, companyName: string) => {
+  return await resend.emails.send({
+    from: process.env.COMPANY_RESEND_GMAIL_ACCOUNT as string,
+    to: email,
+    subject: "Registration Successful!",
+    html: `
+      <h3>Welcome to our platform, ${companyName}!</h3>
+      <p>Your company has been registered successfully. Thank you for choosing us!</p>
+      <p>If you do not receive an approval email within 48 hours, please contact us.</p>
+      <p>Below are your login credentials:</p>
+
+      <p>If you need any assistance, feel free to <a href="mailto:support@inscape.life">Contact Us</a>.</p>
+    `,
+  });
+};
 
 export const sendUserSignupEmail = async (email: string, firstName: string) => {
   return await resend.emails.send({
