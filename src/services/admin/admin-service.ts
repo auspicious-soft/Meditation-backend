@@ -32,17 +32,31 @@ export const loginService = async (payload: any, req: any, res: Response) => {
   if (!user) {
     return errorResponseHandler("User not found", httpStatusCode.NOT_FOUND, res);
   }
+    
+  
   if(user.role !== "admin") {
-  if( !user.emailVerified){
-    return errorResponseHandler("Please verify email to login", httpStatusCode.FORBIDDEN, res);
-  }
+    if (user.isVerifiedByAdmin ) {
+      console.log('user.isVerifiedByAdmin: ', user.isVerifiedByAdmin);
+      if (user.isVerifiedByAdmin === "pending") {
+        console.log('pending: ');
+        return errorResponseHandler("Not verified by Admin yet", httpStatusCode.FORBIDDEN, res);
+      }
+      if (user.isVerifiedByAdmin === "rejected") {
+        return errorResponseHandler("Request rejected by Admin", httpStatusCode.FORBIDDEN, res);
+      }
+    }
+    if(!user.emailVerified){
+      return errorResponseHandler(`Please verify email to login`, httpStatusCode.FORBIDDEN, res);
+    }
+  if (!user.isAccountActive) {
+    return errorResponseHandler("User account is not activated", httpStatusCode.FORBIDDEN, res);
+  }}
   if (user.isBlocked) {
     return errorResponseHandler("User is blocked", httpStatusCode.FORBIDDEN, res);
   }
 
-  if (!user.isAccountActive) {
-    return errorResponseHandler("User account is not activated", httpStatusCode.FORBIDDEN, res);
-  }}
+  
+
   // if (isMobileApp &&  user.role !== "admin" && user.isVerifiedByCompany !== "approved") {
   //   return errorResponseHandler("User is not verified by company", httpStatusCode.FORBIDDEN, res);
   // }
