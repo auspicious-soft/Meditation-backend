@@ -16,6 +16,12 @@ const adminSchema = new mongoose.Schema(
       type: String,
       requried: true,
     },
+    firstName: {
+      type: String,
+    },
+    lastName: {
+      type: String,
+    },
     email: {
       type: String,
       required: true,
