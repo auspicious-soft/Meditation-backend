@@ -79,48 +79,71 @@ export const uploadAudioService = async(req : Request, res : Response)=>{
 };
 
 export const getAllAudiosService = async (req: Request, res: Response) => {
-
- const page = parseInt(req.query.page as string) || 1;
+  // Extract pagination parameters from query
+  const page = parseInt(req.query.page as string) || 1;
   const limit = parseInt(req.query.limit as string) || 0;
   const offset = (page - 1) * limit;
-  const { query, sort } = queryBuilder(req.query, ["songName"]);
+  
+  // Build the query object
+  let query: any = {};
+  
+  // Add collection filter if provided
+  if (req.query.collectionType) {
+    query.collectionType = req.query.collectionType;
+  }
+  
+  // Add levels filter if provided
+  if (req.query.levels) {
+    const levelIds = (req.query.levels as string).split(',');
+    query.levels = { $in: levelIds };
+  }
+  
+  // Add bestFor filter if provided
+  if (req.query.bestFor) {
+    const bestForIds = (req.query.bestFor as string).split(',');
+    query.bestFor = { $in: bestForIds };
+  }
+  
+  // Add search functionality
+  if (req.query.search) {
+    const searchTerm = req.query.search as string;
+    query.songName = { $regex: searchTerm, $options: 'i' }; // Case-insensitive search
+  }
+  
+  // Add any other filters from queryBuilder
+  const { query: additionalQuery, sort } = queryBuilder(req.query, ["songName"]);
+  query = { ...query, ...additionalQuery };
+  
   console.log('query: ', query);
-  const totalDataCount =
-    Object.keys(query).length < 1
-      ? await AudioModel.countDocuments()
-      : await AudioModel.countDocuments(query);
-// Convert page and limit to numbers and ensure they are positive
-// const pageNumber = Math.max(1, parseInt(page as string, 10));
-// const limitNumber = Math.max(1, parseInt(limit as string, 10));
-// const skip = (pageNumber - 1) * limitNumber;
-const totalAudios = await AudioModel.countDocuments();
+  
+  // Count documents with the applied filters
+  const totalDataCount = await AudioModel.countDocuments(query);
 
-// Fetch paginated audios
-const audios = await AudioModel.find(query)
-  .populate("collectionType")
-  .sort({ createdAt: -1 }) // Optional: Sort by createdAt descending
-  .skip(offset) // Skip documents for pagination
-  .limit(limit); // Limit the number of documents returned
+  // Fetch paginated audios with the filters
+  const audios = await AudioModel.find(query)
+    .populate("collectionType")
+    .sort(sort || { createdAt: -1 }) // Use provided sort or default to createdAt descending
+    .skip(offset)
+    .limit(limit);
 
-// Calculate total pages
-const totalPages = Math.ceil(totalAudios / limit);
+  // Calculate total pages based on filtered results
+  const totalPages = limit > 0 ? Math.ceil(totalDataCount / limit) : 1;
 
-return {
-  success: true,
-  message: "Audios fetched successfully",
-  data: {
-    audios,
-    pagination: {
-      total: totalAudios,
-      page ,
-      limit,
-      totalPages,
-      totalDataCount,
-      hasNextPage: page < totalPages,
-      hasPrevPage: page > 1,
+  return {
+    success: true,
+    message: "Audios fetched successfully",
+    data: {
+      audios,
+      pagination: {
+        total: totalDataCount,
+        page,
+        limit,
+        totalPages,
+        hasNextPage: page < totalPages,
+        hasPrevPage: page > 1,
+      },
     },
-  },
-}
+  };
 };
 
 export const getAudioByIdService = async (req: Request, res: Response) => {
