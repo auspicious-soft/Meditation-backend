@@ -65,9 +65,6 @@ export const companySignupService = async (payload: any, req: any, res: Response
 	return {
 		success: true,
 		message: "Request sent successfully",
-		data: {
-			userData,
-		},
 	};
 };
 

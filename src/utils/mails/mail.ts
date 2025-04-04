@@ -143,38 +143,6 @@ export const sendWelcomeEmail = async (
   }
 };
 
-// export const sendCompanyVerificationEmail = async (
-//   email: string,
-//   verificationCode: string
-// ) => {
-//   try {
-//     console.log("Sending verification email with payload:", {
-//       email,
-//       verificationCode,
-//     });
-
-//     const frontendURL = process.env.FRONTEND_URL || "https://panel.inscape.life/verifyotp";
-//     // const verificationLink = `${frontendURL}/verify-email?email=${encodeURIComponent(email)}&code=${encodeURIComponent(verificationCode)}`;
-//     // console.log('verificationLink: ', verificationLink);
-
-//     return await resend.emails.send({
-//       from: process.env.COMPANY_RESEND_GMAIL_ACCOUNT as string,
-//       to: email,
-//       subject: "Verify your email address",
-//       html: `
-//         <h3>Verify your email address</h3>
-//         <p>Please verify your email address by entering the following verification code:</p>
-//         <h2>${verificationCode}</h2>
-//         <p>Or click the link below to verify automatically:</p>
-//         <a href="${frontendURL}" target="_blank">${frontendURL}</a>
-//         <p>Thank you for signing up!</p>
-//       `,
-//     });
-//   } catch (error) {
-//     console.error("Error sending verification email:", error);
-//     throw new Error("Failed to send verification email.");
-//   }
-// };
  
 export const subscriptionExpireReminder = async (payload: any) => {
   await resend.emails.send({

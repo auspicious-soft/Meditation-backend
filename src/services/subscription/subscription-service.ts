@@ -1009,6 +1009,7 @@ export const afterSubscriptionCreatedService = async (payload: any, transaction:
 	if (event.type === 'payment_intent.succeeded' || event.type === 'checkout.session.completed') {
 		console.log('checkout.session.completed: ');
 		const session = event.data.object as Stripe.Checkout.Session;
+		console.log('session: ', session);
 		const subscriptionId = session.subscription as string;
 		if (!subscriptionId) {
 		  console.log('No subscription ID found in checkout session');

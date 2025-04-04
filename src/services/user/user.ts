@@ -1062,7 +1062,7 @@ export const getHomePageService = async (payload: any, res: Response) => {
         },
     ]);
 
-    const meditationType = await bestForModel.aggregate([
+	const meditationType = await bestForModel.aggregate([
         {
             $lookup: {
                 from: "collections",
@@ -1092,16 +1092,23 @@ export const getHomePageService = async (payload: any, res: Response) => {
                 audioCount: { $sum: { $size: "$audios" } },
             },
         },
+        // Add filter to only include documents with audioCount > 0
+        {
+            $match: {
+                audioCount: { $gt: 0 }
+            }
+        }
     ]);
 
     const bestForType = await bestForModel.find({ name: "Breathing" });
 
-    // Breathing with population
+    // Modified breathing query to match audio's bestFor instead of collectionType's bestFor
     const breathing = await AudioModel
-        .find()
+        .find({
+            bestFor: new mongoose.Types.ObjectId(bestForType[0]._id)
+        })
         .populate({
             path: "collectionType",
-            match: { bestFor: new mongoose.Types.ObjectId(bestForType[0]._id) },
             populate: [
                 { path: 'bestFor' },
                 { path: 'levels' }
@@ -1111,6 +1118,7 @@ export const getHomePageService = async (payload: any, res: Response) => {
         .populate('levels')
         .exec();
 
+    
     return {
         success: true,
         message: `Home page fetched successfully`,
