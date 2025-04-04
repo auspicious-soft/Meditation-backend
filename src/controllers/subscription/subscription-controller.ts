@@ -6,8 +6,8 @@ import { afterSubscriptionCreatedService, cancelSubscriptionService, createSubsc
 
 export const updatePrices = async (req: any, res: Response) => {
   try {
-    const { silverPrice, bronzePrice, goldPrice } = req.body;
-    const result = await updatePricesService({ silverPrice, bronzePrice, goldPrice });
+    const { productId, description, price } = req.body;
+    const result = await updatePricesService({ productId, description, price });
     res.status(200).json(result);
   } catch (error) {
    const { code, message } = errorParser(error);
