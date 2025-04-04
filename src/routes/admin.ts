@@ -1,5 +1,5 @@
 import { Router } from "express";
-import {  deleteAUser, forgotPassword, getAdminDetail, getAllUsers, getAnalytics, getAUserById, getDashboardStats,  login,  newPassswordAfterOTPVerified, updateAdmin, updateAdminProfilepic, updateAUser,} from "../controllers/admin/admin";
+import {  deleteAUser, forgotPassword, getAdminDetail, getAllUsers, getAnalytics, getAUserById, getDashboardStats,  login,  newPassswordAfterOTPVerified, toggleBlockedUser, updateAdmin, updateAdminProfilepic, updateAUser,} from "../controllers/admin/admin";
 // import { checkAdminAuth } from "../middleware/check-auth";
 import { upload } from "../configF/multer";
 import { checkMulter } from "../lib/errors/error-response-handler"
@@ -35,6 +35,7 @@ router.put("/update/collection/:id", updateCollection);
 router.put("/update/audio/:id",updateAudio)
 router.put("/user/update/:id",updateAUser)
 router.put("/companies/:id/block", toggleBlockedCompany);
+router.put("/user/:id/block", toggleBlockedUser);
 router.patch("/level/:id",updateLevel)
 router.patch("/bestfor/:id",updateBestFor)
 router.patch("/update/company/name/:id",updateCompanyName)

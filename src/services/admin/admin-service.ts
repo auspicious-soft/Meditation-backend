@@ -16,7 +16,9 @@ import { usersModel } from "src/models/user/user-schema";
 import { companyModels } from "../../models/company/company-schema"; 
 import jwt from "jsonwebtoken";
 import { getAllSubscriptions } from "../subscription/subscription-service";
-
+interface BlockRequestBody {
+  isBlocked: boolean;
+}
 const schemas = [adminModel, usersModel, companyModels];
 
 export const loginService = async (payload: any, req: any, res: Response) => {
@@ -348,7 +350,6 @@ export const updateAdminService = async(req :any, res: Response)=>{
   }
 }
 export const updateAdminProfilepicService = async(req :any, res: Response)=>{
-  console.log('req:', req);
   const updatedAdmin = await adminModel.findByIdAndUpdate(req.currentUser, {profilePic: req.body.profilePic}, {new: true});
   if(!updatedAdmin) return errorResponseHandler("Admin not found", httpStatusCode.NOT_FOUND, res);
   return {
@@ -356,4 +357,49 @@ export const updateAdminProfilepicService = async(req :any, res: Response)=>{
     message: "Admin profile picture updated successfully",
     data: updatedAdmin
   }
+}
+export const toggleBlockedUserService = async (req: any, res: Response) => {
+ const { id } = req.params;
+
+  // Validate ID
+  if (!id) {
+    return errorResponseHandler("Company ID is required", httpStatusCode.BAD_REQUEST, res);
+  }
+
+  // Extract isBlocked from request body
+  const body = req.body as unknown;
+  const { isBlocked } = body as BlockRequestBody;
+
+  // Validate request body
+  if (typeof isBlocked !== "boolean") {
+    return errorResponseHandler(
+      "isBlocked must be a boolean value",
+      httpStatusCode.BAD_REQUEST,
+      res
+    );
+  }
+
+  // Find and update the company
+  const company = await usersModel.findByIdAndUpdate(
+    id,
+    { isBlocked },
+    { new: true, runValidators: true } // Return updated document and validate schema
+  );
+
+  // Check if company exists
+  if (!company) {
+    return errorResponseHandler("Company not found", httpStatusCode.NOT_FOUND, res);
+  }
+
+  // Prepare response data (excluding password)
+  const companyData = company.toObject() as any;
+  delete companyData.password;
+
+  // Return success response
+  return {
+    success: true,
+    data: companyData,
+    message: `Company ${isBlocked ? "blocked" : "unblocked"} successfully`,
+    statusCode: httpStatusCode.OK,
+  };
 }

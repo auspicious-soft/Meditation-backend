@@ -343,7 +343,6 @@ export const toggleBlockedCompanyService = async (req: any, res: Response) => {
     success: true,
     data: companyData,
     message: `Company ${isBlocked ? "blocked" : "unblocked"} successfully`,
-    statusCode: httpStatusCode.OK,
   };
 }
 

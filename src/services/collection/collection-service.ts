@@ -47,10 +47,6 @@ export const createCollectionService = async (req: Request, res: Response) => {
 			isActive: true,
 		});
 
-		console.log(
-			"Existing bestFor in DB:",
-			existingBestFor.map((bf) => bf._id)
-		);
 
 		if (existingBestFor.length !== bestFor.length) {
 			return errorResponseHandler("One or more selected 'best for' tags do not exist or are inactive", httpStatusCode.BAD_REQUEST, res);

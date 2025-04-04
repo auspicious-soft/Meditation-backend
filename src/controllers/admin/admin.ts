@@ -13,6 +13,7 @@ import {
   getAdminDetailService,
   updateAdminService,
   updateAdminProfilepicService,
+  toggleBlockedUserService,
 } from "../../services/admin/admin-service";
 import { errorParser } from "../../lib/errors/error-response-handler";
 import { httpStatusCode } from "../../lib/constant";
@@ -173,3 +174,14 @@ export const updateAdminProfilepic = async (req: Request, res: Response) => {
       .json({ success: false, message: message || "An error occurred" });
   }
 };
+export const toggleBlockedUser = async (req: Request, res: Response) => {
+  try {
+    const response = await toggleBlockedUserService(req,  res);
+    return res.status(httpStatusCode.OK).json(response);
+  } catch (error: any) {
+    const { code, message } = errorParser(error);
+    return res
+      .status(code || httpStatusCode.INTERNAL_SERVER_ERROR)
+      .json({ success: false, message: message || "An error occurred" });
+  }
+}
