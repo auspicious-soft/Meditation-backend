@@ -47,7 +47,7 @@ router.delete("/delete-bestfor/:id",deleteBestFor);
 router.delete("/delete-level/:id",deleteLevel)
 //Analysis
 router.get("/analysis", getAnalytics)
-
+ 
 //plan expire remainder
 router.post("/subscription-expire-remainder/:id", subscriptionExpireRemainder)
 
