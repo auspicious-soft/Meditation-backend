@@ -131,59 +131,80 @@ export const getAllCollectionsService = async (req: Request, res: Response) => {
 	};
 };
 export const getAllCollectionsAdminService = async (req: Request, res: Response) => {
-	// Extract pagination parameters from query
-	const page = parseInt(req.query.page as string) || 1;
-	const limit = parseInt(req.query.limit as string) || 0;
-	const offset = (page - 1) * limit;
-	const { query, sort } = queryBuilder(req.query, ["fullName"]);
-	const totalDataCount = Object.keys(query).length < 1 ? await collectionModel.countDocuments() : await collectionModel.countDocuments(query);
+  // Extract pagination parameters from query
+  const page = parseInt(req.query.page as string) || 1;
+  const limit = parseInt(req.query.limit as string) || 0;
+  const offset = (page - 1) * limit;
+  
+  // Build the query object
+  let query: any = {};
+  
+  // Add levels filter if provided
+  if (req.query.levels) {
+    const levelIds = (req.query.levels as string).split(',');
+    query.levels = { $in: levelIds };
+  }
+  
+  // Add bestFor filter if provided
+  if (req.query.bestFor) {
+    const bestForIds = (req.query.bestFor as string).split(',');
+    query.bestFor = { $in: bestForIds };
+  }
+  
+  // Add search functionality
+  if (req.query.search) {
+    const searchTerm = req.query.search as string;
+    query.name = { $regex: searchTerm, $options: 'i' }; // Case-insensitive search
+  }
+  
+  // Add any other filters from queryBuilder if needed
+  const { query: additionalQuery, sort } = queryBuilder(req.query, ["fullName"]);
+  query = { ...query, ...additionalQuery };
+  
+  const totalDataCount = await collectionModel.countDocuments(query);
 
-	// Fetch paginated collections
-	const collections = await collectionModel.find(query).populate("levels").populate("bestFor").sort({ createdAt: -1 }).skip(offset).limit(limit);
+  // Fetch paginated collections with the updated query
+  const collections = await collectionModel.find(query)
+    .populate("levels")
+    .populate("bestFor")
+    .sort({ createdAt: -1 })
+    .skip(offset)
+    .limit(limit);
 
-	// Add audio count for each collection and filter out collections with audioCount = 0
-	const collectionsWithAudioCount = await Promise.all(
-		collections.map(async (collection) => {
-			const audioCount = await AudioModel.countDocuments({
-				collectionType: collection._id,
-				isActive: true,
-			});
-			// Only return collection if audioCount > 0
-			
-				return {
-					...collection.toObject(),
-					audioCount,
-				};
-			
-			return null; // Return null for collections with 0 audioCount
-		})
-	);
+  // Add audio count for each collection
+  const collectionsWithAudioCount = await Promise.all(
+    collections.map(async (collection) => {
+      const audioCount = await AudioModel.countDocuments({
+        collectionType: collection._id,
+        isActive: true,
+      });
+      
+      return {
+        ...collection.toObject(),
+        audioCount,
+      };
+    })
+  );
 
-	// Filter out null values and get the valid collections
-	const filteredCollections = collectionsWithAudioCount.filter((collection) => collection !== null);
+  // Calculate total pages based on filtered results
+  const totalPages = limit > 0 ? Math.ceil(totalDataCount / limit) : 1;
 
-	// Get total number of collections with audioCount > 0
-	const totalCollections = filteredCollections.length;
-
-	// Calculate total pages based on filtered results
-	const totalPages = limit > 0 ? Math.ceil(totalDataCount / limit) : 1;
-
-	// Return response
-	return {
-		success: true,
-		message: "Collections fetched successfully",
-		data: {
-			collections: filteredCollections,
-			pagination: {
-				total: totalCollections,
-				page,
-				limit,
-				totalPages,
-				hasNextPage: page < totalPages,
-				hasPrevPage: page > 1,
-			},
-		},
-	};
+  // Return response
+  return {
+    success: true,
+    message: "Collections fetched successfully",
+    data: {
+      collections: collectionsWithAudioCount,
+      pagination: {
+        total: totalDataCount,
+        page,
+        limit,
+        totalPages,
+        hasNextPage: page < totalPages,
+        hasPrevPage: page > 1,
+      },
+    },
+  };
 };
 
 export const getCollectionByIdService = async (id: any, res: Response) => {
